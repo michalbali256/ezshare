@@ -12,16 +12,17 @@ namespace miTorrent
 {
     public partial class TorrentProperties : Form
     {
-        /*private TorrentProperties()
-        {
-            InitializeComponent();
-        }*/
-        public TorrentProperties(Torrent t)
+        public TorrentProperties(Torrent t, bool creatingNew)
         {
             InitializeComponent();
             editing = t;
             textBoxFileName.Text = t.File;
 
+            if (!creatingNew)
+            {
+                buttonBrowse.Enabled = false;
+                textBoxFileName.ReadOnly = true;
+            }
         }
 
         bool OK = false;
