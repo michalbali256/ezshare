@@ -8,10 +8,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Security.Cryptography;
+using System.IO;
+using System.Xml;
 
 public class Torrent
 {
-	public virtual object Status
+    public enum eStatus
+    {
+        Downloading,
+        Paused,
+        Stopped,
+        Seeding
+    }
+
+
+	public virtual eStatus Status
 	{
 		get;
 		set;
@@ -20,32 +32,64 @@ public class Torrent
 	public virtual object DownloadSpeed
 	{
 		get;
-		set;
 	}
 
 	public virtual object UploadSpeed
 	{
 		get;
-		set;
 	}
 
-	public virtual string File
+	public virtual string FileName
 	{
 		get;
-		set;
+		private set;
 	}
 
 	public virtual object ProgressOfFile
 	{
 		get;
-		set;
 	}
 
-	public virtual object Clients
+	public virtual List<Client> Clients
 	{
 		get;
 		set;
 	}
+
+    public long Size
+    {
+        get;
+        set;
+    }
+    public byte[] Hash { get; set; }
+    public string Name { get; set; }
+    private static string XmlName = "torrent";
+
+    public XmlElement SaveToXml(XmlDocument doc)
+    {
+        XmlElement e = doc.CreateElement(XmlName);
+
+        e.AppendChild(CreateElementWithValue(doc, "name", Name));
+        var split = FileName.Split('\\');
+        e.AppendChild(CreateElementWithValue(doc, "file", split[split.Length - 1]));
+        e.AppendChild(CreateElementWithValue(doc, "hash", hashToString(Hash)));
+        return e;
+    }
+
+    private XmlElement CreateElementWithValue(XmlDocument doc, string xmlName, string value)
+    {
+        XmlElement elem = doc.CreateElement(xmlName);
+        elem.Value = value;
+        return elem;
+    }
+    private string hashToString(byte[] hash)
+    {
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < 100; ++i)
+            b.Append((char)hash[i]);
+        return b.ToString();
+    }
+
 
 	public virtual void Start()
 	{
@@ -56,6 +100,24 @@ public class Torrent
 	{
 		throw new System.NotImplementedException();
 	}
+
+    public static Torrent CreateFromPath(string path)
+    {
+        Torrent t = new Torrent();
+        t.FileName = path;
+        using (var md5 = MD5.Create())
+        {
+            using (var stream = File.OpenRead(t.FileName))
+            {
+                t.Hash = md5.ComputeHash(stream);
+            }
+        }
+
+        var fi = new FileInfo(path);
+        t.Size = fi.Length;
+
+        return t;
+    }
 
 }
 

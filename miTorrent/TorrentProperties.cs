@@ -16,7 +16,7 @@ namespace miTorrent
         {
             InitializeComponent();
             editing = t;
-            textBoxFileName.Text = t.File;
+            textBoxFileName.Text = t.FileName;
 
             if (!creatingNew)
             {
@@ -53,7 +53,7 @@ namespace miTorrent
             if (OK)
             {
                 DialogResult = DialogResult.OK;
-                editing.File = textBoxFileName.Text;
+                
             }
             else
                 DialogResult = DialogResult.Cancel;

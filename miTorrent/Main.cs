@@ -4,6 +4,8 @@ using System.Text;
 using System.Windows.Forms;
 using System.Net;
 using System.Threading;
+using System.Xml;
+
 namespace miTorrent
 {
     public partial class Main : Form
@@ -19,16 +21,15 @@ namespace miTorrent
 
         private void toolStripButtonAdd_Click(object sender, EventArgs e)
         {
-            Torrent t = new Torrent();
-            TorrentProperties f = new TorrentProperties(t, true);
-            if (f.ShowDialog() != DialogResult.OK)
+            if (openFileDialogFile.ShowDialog() != DialogResult.OK)
                 return;
+            Torrent t = Torrent.CreateFromPath(openFileDialogFile.FileName);
             manager.Add(t);
             DataGridViewRow r = new DataGridViewRow();
             r.Tag = t;
             r.ContextMenuStrip = contextMenuStripRow;
             r.CreateCells(dataGridView);
-            r.Cells[0].Value = t.File;
+            r.Cells[0].Value = t.FileName;
             
             dataGridView.Rows.Add(r);
             
@@ -60,6 +61,22 @@ namespace miTorrent
                 dataGridView.ClearSelection();
                 dataGridView.Rows[hti.RowIndex].Selected = true;
             }
+        }
+
+        private void saveshareFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (saveFileDialogShare.ShowDialog() != DialogResult.OK)
+                return;
+
+            Torrent t = (Torrent)dataGridView.SelectedRows[0].Tag;
+
+            XmlDocument doc = new XmlDocument();
+            XmlElement documentElement = doc.CreateElement("share");
+            documentElement.AppendChild(manager.ShareHeaderToXml(doc));
+            documentElement.AppendChild(t.SaveToXml(doc));
+
+            doc.AppendChild(documentElement);
+            doc.Save(saveFileDialogShare.FileName);
         }
     }
 }
