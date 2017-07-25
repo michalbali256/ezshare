@@ -16,7 +16,7 @@ namespace miTorrent
         {
             InitializeComponent();
             editing = t;
-            textBoxFileName.Text = t.FileName;
+            textBoxFileName.Text = t.FilePath;
 
             if (!creatingNew)
             {

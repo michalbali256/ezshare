@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using System.Threading;
+using System.Net.Sockets;
+using System.Net;
 
 public class TorrentManager
 {
@@ -16,13 +19,32 @@ public class TorrentManager
         set { torrents[i] = value; }
     }
 
-	public virtual object Listener
-	{
-		get;
-		set;
-	}
 
-	public virtual object Clients
+
+    public void StartListening()
+    {
+        Thread t = new Thread(() =>
+            {
+                TcpListener lis = new TcpListener(new IPAddress(myIP), port);
+                lis.Start();
+                TcpClient cl;
+                while (true)
+                {
+                    cl = lis.AcceptTcpClient();
+                    NetworkStream str = cl.GetStream();
+                    byte[] buffer = new byte[1000];
+                    str.Read(buffer, 0, 100);
+                    StringBuilder b = new StringBuilder();
+                    for (int i = 0; i < 100; ++i)
+                        b.Append((char)buffer[i]);
+                    
+                }
+            });
+
+            t.Start();
+    }
+
+    public virtual object Clients
 	{
 		get;
 		set;

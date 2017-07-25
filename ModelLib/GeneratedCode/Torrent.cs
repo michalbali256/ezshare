@@ -39,13 +39,19 @@ public class Torrent
 		get;
 	}
 
-	public virtual string FileName
+	public virtual string FilePath
 	{
 		get;
 		private set;
 	}
+    public virtual string FileName
+    {
+        get;
+        private set;
+    }
 
-	public virtual object ProgressOfFile
+
+    public virtual object ProgressOfFile
 	{
 		get;
 	}
@@ -59,9 +65,9 @@ public class Torrent
     public long Size
     {
         get;
-        set;
+        private set;
     }
-    public byte[] Hash { get; set; }
+    public string Hash { get; private set; }
     public string Name { get; set; }
     private static string XmlName = "torrent";
 
@@ -70,24 +76,23 @@ public class Torrent
         XmlElement e = doc.CreateElement(XmlName);
 
         e.AppendChild(CreateElementWithValue(doc, "name", Name));
-        var split = FileName.Split('\\');
-        e.AppendChild(CreateElementWithValue(doc, "file", split[split.Length - 1]));
-        e.AppendChild(CreateElementWithValue(doc, "hash", hashToString(Hash)));
+        
+        e.AppendChild(CreateElementWithValue(doc, "filename", FileName));
+        e.AppendChild(CreateElementWithValue(doc, "filepath", FilePath));
+        e.AppendChild(CreateElementWithValue(doc, "hash", Hash));
+        e.AppendChild(CreateElementWithValue(doc, "size", Size.ToString()));
         return e;
     }
 
     private XmlElement CreateElementWithValue(XmlDocument doc, string xmlName, string value)
     {
         XmlElement elem = doc.CreateElement(xmlName);
-        elem.Value = value;
+        elem.InnerText = value;
         return elem;
     }
-    private string hashToString(byte[] hash)
+    private static string hashToString(byte[] hash)
     {
-        StringBuilder b = new StringBuilder();
-        for (int i = 0; i < 100; ++i)
-            b.Append((char)hash[i]);
-        return b.ToString();
+        return BitConverter.ToString(hash).Replace("-", string.Empty);
     }
 
 
@@ -104,18 +109,31 @@ public class Torrent
     public static Torrent CreateFromPath(string path)
     {
         Torrent t = new Torrent();
-        t.FileName = path;
+        t.FilePath = path;
+        var split = t.FilePath.Split('\\');
+        t.FileName = split[split.Length - 1];
         using (var md5 = MD5.Create())
         {
-            using (var stream = File.OpenRead(t.FileName))
+            using (var stream = File.OpenRead(t.FilePath))
             {
-                t.Hash = md5.ComputeHash(stream);
+                t.Hash = hashToString(md5.ComputeHash(stream));
             }
         }
 
         var fi = new FileInfo(path);
         t.Size = fi.Length;
+        t.Name = t.FileName;
+        return t;
+    }
 
+    public static Torrent CreateFromXml(XmlElement elem)
+    {
+        Torrent t = new Torrent();
+        t.Name = elem["name"].InnerText;
+        t.FileName = elem["filename"].InnerText;
+        t.FilePath = elem["filepath"].InnerText;
+        t.Hash = elem["hash"].InnerText;
+        t.Size = int.Parse(elem["size"].InnerText);
         return t;
     }
 

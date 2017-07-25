@@ -29,7 +29,7 @@ namespace miTorrent
             r.Tag = t;
             r.ContextMenuStrip = contextMenuStripRow;
             r.CreateCells(dataGridView);
-            r.Cells[0].Value = t.FileName;
+            r.Cells[0].Value = t.FilePath;
             
             dataGridView.Rows.Add(r);
             
