@@ -45,31 +45,31 @@ public class TorrentManager : IEnumerable<Torrent>
 
     public async void StartListening()
     {
+        Logger.WriteLine("Starting to listen");
         await startListeningAsync();
     }
 
     private async Task startListeningAsync()
     {
-
         TcpListener lis = new TcpListener(new IPAddress(MyConnectInfo.IP), MyConnectInfo.Port);
         lis.Start();
         TcpClient c;
 
-        while (true)
+        for(;;)
         {
             c = await lis.AcceptTcpClientAsync();
-
             Client mc = new Client(c);
+            Logger.WriteLine("Client connected. IP: " + ((IPEndPoint)c.Client.RemoteEndPoint).Address.ToString());
 
             string id = await mc.ReceiveIdAsync();
+            Logger.WriteLine("Requests torrent with id: " + id);
+
 
             torrents[id].AddClient(mc);
             Clients.Add(mc);
 
+            
         }
-
-
-
     }
 
     public virtual HashSet<Client> Clients

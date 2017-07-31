@@ -41,6 +41,7 @@ public class Torrent
     internal void AddClient(Client mc)
     {
         Clients.Add(mc);
+        mc.Listen();
     }
 
     public virtual eStatus Status

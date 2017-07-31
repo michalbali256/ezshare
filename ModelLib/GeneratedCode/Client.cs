@@ -47,6 +47,29 @@ public class Client
         await stream.WriteAsync(buffer, 0, 32);
     }
 
+    enum eMessage
+    {
+        Part,
+
+    }
+
+    internal async Task Listen()
+    {
+        for (;;)
+        {
+            byte[] b = new byte[1];
+            await stream.ReadAsync(b, 0, 1);
+            switch ((eMessage)b[0])
+            {
+                case eMessage.Part:
+                    
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
     public async Task<string> ReceiveIdAsync()
     {
         byte[] buffer = new byte[32];

@@ -13,16 +13,18 @@ namespace miTorrent
         public Main()
         {
             InitializeComponent();
-            
-
+            Logger.WriteLineE += Logger_WriteLineE;
+            Logger.WriteLine("Loading settings.xml");
             XmlDocument doc = new XmlDocument();
             try
             {
                 doc.Load(settingsFile);
                 manager = TorrentManager.FromXml(doc[xmlName][TorrentManager.XmlName]);
+                Logger.WriteLine("Loaded settings.xml");
             }
             catch (System.IO.IOException ex)
             {
+                Logger.WriteLine("Loading settings.xml failed, using default settings");
                 manager = new TorrentManager();
             }
 
@@ -32,13 +34,22 @@ namespace miTorrent
                 addRow(t);
             }
 
+            manager.StartListening();
+            
+
+        }
+
+        private void Logger_WriteLineE(string obj)
+        {
+            listBoxLog.Items.Add(obj);
         }
 
         TorrentManager manager;
 
         private void updateTable()
         {
-
+            foreach (DataGridViewRow r in dataGridView.Rows)
+                updateRow(r);
         }
 
         private void addRow(Torrent t)
@@ -70,7 +81,7 @@ namespace miTorrent
             if (openFileDialogFile.ShowDialog() != DialogResult.OK)
                 return;
             Torrent t = Torrent.CreateFromPath(openFileDialogFile.FileName);
-            
+            addRow(t);
             manager.Add(t);
         }
 
