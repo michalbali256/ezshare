@@ -72,11 +72,45 @@ namespace miTorrent
 
             XmlDocument doc = new XmlDocument();
             XmlElement documentElement = doc.CreateElement("share");
-            documentElement.AppendChild(manager.ShareHeaderToXml(doc));
+            documentElement.AppendChild(manager.MyConnectInfo.ShareHeaderToXml(doc));
             documentElement.AppendChild(t.SaveToXml(doc));
 
             doc.AppendChild(documentElement);
             doc.Save(saveFileDialogShare.FileName);
+        }
+
+        private void toolStripButtonStart_Click(object sender, EventArgs e)
+        {
+            manager.StartListening();
+        }
+
+        private void toolStripButtonConnect_Click(object sender, EventArgs e)
+        {
+            if (openFileDialogTorrent.ShowDialog() != DialogResult.OK)
+                return;
+            XmlDocument doc = new XmlDocument();
+            Torrent torrent;
+            ConnectInfo connectInfo;
+            try
+            {
+                doc.Load(openFileDialogTorrent.FileName);
+                XmlElement headerElement = doc["share"][ConnectInfo.XmlName];
+                XmlElement torrentElement = doc["share"][Torrent.XmlName];
+                torrent = Torrent.CreateFromXml(torrentElement);
+                connectInfo = ConnectInfo.ParseXml(headerElement);
+                
+            }
+            catch (System.IO.IOException ex)
+            {
+                MessageBox.Show("Couldn't open file. " + ex.ToString());
+            }
+            catch (XmlException ex)
+            {
+                MessageBox.Show("File has wrong format. " + ex.ToString());
+            }
+            
+
+
         }
     }
 }

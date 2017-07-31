@@ -14,6 +14,21 @@ using System.Xml;
 
 public class Torrent
 {
+    public Torrent()
+    {
+        id = "";
+        Random r = new Random();
+        byte[] bytes = new byte[16];
+        for (int i = 0; i < 16; ++i)
+            bytes[i] = (byte)r.Next(256);
+        id = hashToString(bytes);
+    }
+
+    public Torrent(string id)
+    {
+        this.id = id;
+    }
+
     public enum eStatus
     {
         Downloading,
@@ -22,8 +37,12 @@ public class Torrent
         Seeding
     }
 
+    internal void AddClient(Client mc)
+    {
+        Clients.Add(mc);
+    }
 
-	public virtual eStatus Status
+    public virtual eStatus Status
 	{
 		get;
 		set;
@@ -33,6 +52,13 @@ public class Torrent
 	{
 		get;
 	}
+
+
+    private readonly string id;
+    public  string Id
+    {
+        get { return id;}
+    }
 
 	public virtual object UploadSpeed
 	{
@@ -69,18 +95,19 @@ public class Torrent
     }
     public string Hash { get; private set; }
     public string Name { get; set; }
-    private static string XmlName = "torrent";
+    public static string XmlName = "torrent";
 
     public XmlElement SaveToXml(XmlDocument doc)
     {
         XmlElement e = doc.CreateElement(XmlName);
 
         e.AppendChild(CreateElementWithValue(doc, "name", Name));
-        
+        e.AppendChild(CreateElementWithValue(doc, "id", Id));
         e.AppendChild(CreateElementWithValue(doc, "filename", FileName));
         e.AppendChild(CreateElementWithValue(doc, "filepath", FilePath));
         e.AppendChild(CreateElementWithValue(doc, "hash", Hash));
         e.AppendChild(CreateElementWithValue(doc, "size", Size.ToString()));
+
         return e;
     }
 
@@ -128,7 +155,7 @@ public class Torrent
 
     public static Torrent CreateFromXml(XmlElement elem)
     {
-        Torrent t = new Torrent();
+        Torrent t = new Torrent(elem["id"].InnerText);
         t.Name = elem["name"].InnerText;
         t.FileName = elem["filename"].InnerText;
         t.FilePath = elem["filepath"].InnerText;

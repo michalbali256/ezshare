@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml;
-using System.Threading;
+using System.Threading.Tasks;
+
 using System.Net.Sockets;
 using System.Net;
 
 public class TorrentManager
 {
-    List<Torrent> torrents = new List<Torrent>();
-    byte[] myIP = { 192, 168, 0, 100 };
-    int port = 10421;
+    Dictionary<string, Torrent> torrents = new Dictionary<string, Torrent>();
 
-    public Torrent this[int i]
+    public ConnectInfo MyConnectInfo = new ConnectInfo(new byte[]{ 192, 168, 1, 102 }, 10421);
+    public Torrent this[string i]
     {
         get { return torrents[i]; }
         set { torrents[i] = value; }
@@ -21,30 +21,36 @@ public class TorrentManager
 
 
 
-    public void StartListening()
+    public async void StartListening()
     {
-        Thread t = new Thread(() =>
-            {
-                TcpListener lis = new TcpListener(new IPAddress(myIP), port);
-                lis.Start();
-                TcpClient cl;
-                while (true)
-                {
-                    cl = lis.AcceptTcpClient();
-                    NetworkStream str = cl.GetStream();
-                    byte[] buffer = new byte[1000];
-                    str.Read(buffer, 0, 100);
-                    StringBuilder b = new StringBuilder();
-                    for (int i = 0; i < 100; ++i)
-                        b.Append((char)buffer[i]);
-                    
-                }
-            });
-
-            t.Start();
+        await startListeningAsync();
     }
 
-    public virtual object Clients
+    private async Task startListeningAsync()
+    {
+
+        TcpListener lis = new TcpListener(new IPAddress(MyConnectInfo.IP), MyConnectInfo.Port);
+        lis.Start();
+        TcpClient c;
+
+        while (true)
+        {
+            c = await lis.AcceptTcpClientAsync();
+
+            Client mc = new Client(c);
+
+            string id = await mc.ReceiveIdAsync();
+
+            torrents[id].AddClient(mc);
+            Clients.Add(mc);
+
+        }
+
+
+
+    }
+
+    public virtual HashSet<Client> Clients
 	{
 		get;
 		set;
@@ -53,28 +59,12 @@ public class TorrentManager
 
 	public virtual void Add(Torrent t)
 	{
-        torrents.Add(t);
+        torrents.Add(t.Id, t);
 	}
 
     public virtual void Remove(Torrent t)
     {
-        torrents.Remove(t);
-    }
-
-    static string shareHeaderXmlName = "host";
-
-    public XmlElement ShareHeaderToXml(XmlDocument doc)
-    {
-        XmlElement el = doc.CreateElement(shareHeaderXmlName);
-        XmlElement ip = doc.CreateElement("ip");
-        ip.InnerText = $"{myIP[0]}.{myIP[1]}.{myIP[2]}.{myIP[3]}";
-        XmlElement port = doc.CreateElement("port");
-        port.InnerText = this.port.ToString();
-
-        el.AppendChild(ip);
-        el.AppendChild(port);
-
-        return el;
+        torrents.Remove(t.Id);
     }
 }
 

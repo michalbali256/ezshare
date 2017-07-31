@@ -30,6 +30,12 @@
         {
             this.components = new System.ComponentModel.Container();
             this.dataGridView = new System.Windows.Forms.DataGridView();
+            this.columnTorrent = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnProgress = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnState = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnSize = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnDownload = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnUpload = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonConnect = new System.Windows.Forms.ToolStripButton();
@@ -45,12 +51,6 @@
             this.saveshareFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.propertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileDialogFile = new System.Windows.Forms.OpenFileDialog();
-            this.columnTorrent = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnProgress = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnState = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnSize = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnDownload = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnUpload = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.saveFileDialogShare = new System.Windows.Forms.SaveFileDialog();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
@@ -84,6 +84,44 @@
             this.dataGridView.TabIndex = 0;
             this.dataGridView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dataGridView_MouseDown);
             // 
+            // columnTorrent
+            // 
+            this.columnTorrent.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.columnTorrent.HeaderText = "Torrent";
+            this.columnTorrent.Name = "columnTorrent";
+            this.columnTorrent.ReadOnly = true;
+            this.columnTorrent.Width = 141;
+            // 
+            // columnProgress
+            // 
+            this.columnProgress.HeaderText = "Progress";
+            this.columnProgress.Name = "columnProgress";
+            this.columnProgress.ReadOnly = true;
+            // 
+            // columnState
+            // 
+            this.columnState.HeaderText = "State";
+            this.columnState.Name = "columnState";
+            this.columnState.ReadOnly = true;
+            // 
+            // columnSize
+            // 
+            this.columnSize.HeaderText = "Size";
+            this.columnSize.Name = "columnSize";
+            this.columnSize.ReadOnly = true;
+            // 
+            // columnDownload
+            // 
+            this.columnDownload.HeaderText = "Download";
+            this.columnDownload.Name = "columnDownload";
+            this.columnDownload.ReadOnly = true;
+            // 
+            // columnUpload
+            // 
+            this.columnUpload.HeaderText = "Upload";
+            this.columnUpload.Name = "columnUpload";
+            this.columnUpload.ReadOnly = true;
+            // 
             // statusStrip1
             // 
             this.statusStrip1.Location = new System.Drawing.Point(0, 419);
@@ -116,6 +154,7 @@
             this.toolStripButtonConnect.Name = "toolStripButtonConnect";
             this.toolStripButtonConnect.Size = new System.Drawing.Size(23, 22);
             this.toolStripButtonConnect.Text = "toolStripButton6";
+            this.toolStripButtonConnect.Click += new System.EventHandler(this.toolStripButtonConnect_Click);
             // 
             // toolStripButtonAdd
             // 
@@ -149,6 +188,7 @@
             this.toolStripButtonStart.Name = "toolStripButtonStart";
             this.toolStripButtonStart.Size = new System.Drawing.Size(23, 22);
             this.toolStripButtonStart.Text = "Play";
+            this.toolStripButtonStart.Click += new System.EventHandler(this.toolStripButtonStart_Click);
             // 
             // toolStripButtonPause
             // 
@@ -202,44 +242,6 @@
             // openFileDialogFile
             // 
             this.openFileDialogFile.FileName = "openFileDialog1";
-            // 
-            // columnTorrent
-            // 
-            this.columnTorrent.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.columnTorrent.HeaderText = "Torrent";
-            this.columnTorrent.Name = "columnTorrent";
-            this.columnTorrent.ReadOnly = true;
-            this.columnTorrent.Width = 141;
-            // 
-            // columnProgress
-            // 
-            this.columnProgress.HeaderText = "Progress";
-            this.columnProgress.Name = "columnProgress";
-            this.columnProgress.ReadOnly = true;
-            // 
-            // columnState
-            // 
-            this.columnState.HeaderText = "State";
-            this.columnState.Name = "columnState";
-            this.columnState.ReadOnly = true;
-            // 
-            // columnSize
-            // 
-            this.columnSize.HeaderText = "Size";
-            this.columnSize.Name = "columnSize";
-            this.columnSize.ReadOnly = true;
-            // 
-            // columnDownload
-            // 
-            this.columnDownload.HeaderText = "Download";
-            this.columnDownload.Name = "columnDownload";
-            this.columnDownload.ReadOnly = true;
-            // 
-            // columnUpload
-            // 
-            this.columnUpload.HeaderText = "Upload";
-            this.columnUpload.Name = "columnUpload";
-            this.columnUpload.ReadOnly = true;
             // 
             // saveFileDialogShare
             // 
