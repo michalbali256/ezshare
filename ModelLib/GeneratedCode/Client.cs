@@ -13,7 +13,7 @@ public class Client
     public Client()
     {
         client = new TcpClient();
-        stream = client.GetStream();
+        
         
     }
 
@@ -29,16 +29,17 @@ public class Client
             b.Append((char)buffer[i]);*/
     }
 
-    public async void ConnectAsync(ConnectInfo info)
+    public async Task ConnectAsync(ConnectInfo info)
     {
         await client.ConnectAsync(new IPAddress(info.IP), info.Port);
+        stream = client.GetStream();
     }
 
     /// <summary>
     /// Sends id.
     /// </summary>
     /// <param name="id">The id that should be 32 chars long</param>
-    public async void SendIdAsync(string id)
+    public async Task SendIdAsync(string id)
     {
         byte[] buffer = new byte[32];
         for (int i = 0; i < 32; ++i)

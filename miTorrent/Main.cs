@@ -13,31 +13,82 @@ namespace miTorrent
         public Main()
         {
             InitializeComponent();
+            
+
+            XmlDocument doc = new XmlDocument();
+            try
+            {
+                doc.Load(settingsFile);
+                manager = TorrentManager.FromXml(doc[xmlName][TorrentManager.XmlName]);
+            }
+            catch (System.IO.IOException ex)
+            {
+                manager = new TorrentManager();
+            }
+
             dataGridView.Rows.Clear();
+            foreach (var t in manager)
+            {
+                addRow(t);
+            }
+
         }
 
-        TorrentManager manager = new TorrentManager();
-        
+        TorrentManager manager;
+
+        private void updateTable()
+        {
+
+        }
+
+        private void addRow(Torrent t)
+        {
+            DataGridViewRow r = new DataGridViewRow();
+            r.Tag = t;
+            r.ContextMenuStrip = contextMenuStripRow;
+            r.CreateCells(dataGridView);
+            updateRow(r);
+            dataGridView.Rows.Add(r);
+        }
+
+        private void updateRow(DataGridViewRow r)
+        {
+            Torrent t = (Torrent)r.Tag;
+            r.Cells[0].Value = t.Name;
+
+            r.Cells[2].Value = t.Status.ToString();
+            r.Cells[3].Value = normalizeSize(t.Size);
+        }
+
+        private string normalizeSize(long size)
+        {
+            return size.ToString();
+        }
 
         private void toolStripButtonAdd_Click(object sender, EventArgs e)
         {
             if (openFileDialogFile.ShowDialog() != DialogResult.OK)
                 return;
             Torrent t = Torrent.CreateFromPath(openFileDialogFile.FileName);
-            manager.Add(t);
-            DataGridViewRow r = new DataGridViewRow();
-            r.Tag = t;
-            r.ContextMenuStrip = contextMenuStripRow;
-            r.CreateCells(dataGridView);
-            r.Cells[0].Value = t.FilePath;
             
-            dataGridView.Rows.Add(r);
+            manager.Add(t);
+        }
+
+        const string settingsFile = "settings.xml";
+        const string xmlName = "settings";
+        private void Main_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            XmlDocument doc = new XmlDocument();
+            XmlElement settings = doc.CreateElement(xmlName);
+            settings.AppendChild(manager.SaveToXml(doc));
+            doc.AppendChild(settings);
+            doc.Save(settingsFile);
             
         }
 
-        private void Main_FormClosed(object sender, FormClosedEventArgs e)
+        private void Main_Load(object sender, EventArgs e)
         {
-
+            
         }
 
         private void propertiesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -84,13 +135,13 @@ namespace miTorrent
             manager.StartListening();
         }
 
-        private void toolStripButtonConnect_Click(object sender, EventArgs e)
+        private async void toolStripButtonConnect_Click(object sender, EventArgs e)
         {
             if (openFileDialogTorrent.ShowDialog() != DialogResult.OK)
                 return;
             XmlDocument doc = new XmlDocument();
             Torrent torrent;
-            ConnectInfo connectInfo;
+            ConnectInfo connectInfo = new ConnectInfo();
             try
             {
                 doc.Load(openFileDialogTorrent.FileName);
@@ -98,7 +149,8 @@ namespace miTorrent
                 XmlElement torrentElement = doc["share"][Torrent.XmlName];
                 torrent = Torrent.CreateFromXml(torrentElement);
                 connectInfo = ConnectInfo.ParseXml(headerElement);
-                
+
+                await manager.ConnectTorrentAsync(torrent, connectInfo);
             }
             catch (System.IO.IOException ex)
             {
@@ -109,8 +161,15 @@ namespace miTorrent
                 MessageBox.Show("File has wrong format. " + ex.ToString());
             }
             
+        }
 
-
+        private void toolStripButtonRemove_Click(object sender, EventArgs e)
+        {
+            foreach (DataGridViewRow r in dataGridView.SelectedRows)
+            {
+                manager.Remove((Torrent)r.Tag);
+                dataGridView.Rows.Remove(r);
+            }
         }
     }
 }

@@ -153,7 +153,7 @@
             this.toolStripButtonConnect.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonConnect.Name = "toolStripButtonConnect";
             this.toolStripButtonConnect.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButtonConnect.Text = "toolStripButton6";
+            this.toolStripButtonConnect.Text = "Connect to existing torrent";
             this.toolStripButtonConnect.Click += new System.EventHandler(this.toolStripButtonConnect_Click);
             // 
             // toolStripButtonAdd
@@ -163,7 +163,7 @@
             this.toolStripButtonAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonAdd.Name = "toolStripButtonAdd";
             this.toolStripButtonAdd.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButtonAdd.Text = "toolStripButton4";
+            this.toolStripButtonAdd.Text = "Create torrent from existing file";
             this.toolStripButtonAdd.Click += new System.EventHandler(this.toolStripButtonAdd_Click);
             // 
             // toolStripButtonRemove
@@ -173,7 +173,8 @@
             this.toolStripButtonRemove.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonRemove.Name = "toolStripButtonRemove";
             this.toolStripButtonRemove.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButtonRemove.Text = "toolStripButton5";
+            this.toolStripButtonRemove.Text = "Delete torrent";
+            this.toolStripButtonRemove.Click += new System.EventHandler(this.toolStripButtonRemove_Click);
             // 
             // toolStripSeparator1
             // 
@@ -187,7 +188,7 @@
             this.toolStripButtonStart.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonStart.Name = "toolStripButtonStart";
             this.toolStripButtonStart.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButtonStart.Text = "Play";
+            this.toolStripButtonStart.Text = "Start";
             this.toolStripButtonStart.Click += new System.EventHandler(this.toolStripButtonStart_Click);
             // 
             // toolStripButtonPause
@@ -268,6 +269,7 @@
             this.Name = "Main";
             this.Text = "EasyShare";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Main_FormClosed);
+            this.Load += new System.EventHandler(this.Main_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();

@@ -11,6 +11,7 @@ using System.Text;
 using System.Security.Cryptography;
 using System.IO;
 using System.Xml;
+using System.Threading.Tasks;
 
 public class Torrent
 {
@@ -107,8 +108,15 @@ public class Torrent
         e.AppendChild(CreateElementWithValue(doc, "filepath", FilePath));
         e.AppendChild(CreateElementWithValue(doc, "hash", Hash));
         e.AppendChild(CreateElementWithValue(doc, "size", Size.ToString()));
+        e.AppendChild(CreateElementWithValue(doc, "status", Status.ToString()));
 
         return e;
+    }
+
+    internal Task Download()
+    {
+        Status = Torrent.eStatus.Downloading;
+        throw new NotImplementedException();
     }
 
     private XmlElement CreateElementWithValue(XmlDocument doc, string xmlName, string value)
@@ -150,6 +158,7 @@ public class Torrent
         var fi = new FileInfo(path);
         t.Size = fi.Length;
         t.Name = t.FileName;
+        t.Status = eStatus.Seeding;
         return t;
     }
 
@@ -161,6 +170,7 @@ public class Torrent
         t.FilePath = elem["filepath"].InnerText;
         t.Hash = elem["hash"].InnerText;
         t.Size = int.Parse(elem["size"].InnerText);
+        t.Status = (eStatus) Enum.Parse(typeof(eStatus), elem["status"].InnerText);
         return t;
     }
 
