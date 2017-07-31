@@ -54,6 +54,7 @@
             this.saveFileDialogShare = new System.Windows.Forms.SaveFileDialog();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.listBoxLog = new System.Windows.Forms.ListBox();
+            this.saveFileDialogFile = new System.Windows.Forms.SaveFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.contextMenuStripRow.SuspendLayout();
@@ -316,6 +317,7 @@
         private System.Windows.Forms.SaveFileDialog saveFileDialogShare;
         private System.Windows.Forms.MenuStrip menuStrip;
         private System.Windows.Forms.ListBox listBoxLog;
+        private System.Windows.Forms.SaveFileDialog saveFileDialogFile;
     }
 }
 

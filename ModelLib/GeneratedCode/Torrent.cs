@@ -15,8 +15,9 @@ using System.Threading.Tasks;
 
 public class Torrent
 {
-    public Torrent()
+    private Torrent()
     {
+        Clients = new List<Client>();
         id = "";
         Random r = new Random();
         byte[] bytes = new byte[16];
@@ -25,8 +26,9 @@ public class Torrent
         id = hashToString(bytes);
     }
 
-    public Torrent(string id)
+    private Torrent(string id)
     {
+        Clients = new List<Client>();
         this.id = id;
     }
 
@@ -43,6 +45,8 @@ public class Torrent
         Clients.Add(mc);
         mc.Listen();
     }
+
+    
 
     public virtual eStatus Status
 	{
@@ -114,10 +118,13 @@ public class Torrent
         return e;
     }
 
-    internal Task Download()
+    internal async Task Download()
     {
         Status = Torrent.eStatus.Downloading;
-        throw new NotImplementedException();
+        Logger.WriteLine("Starting download:" + Name);
+
+        
+        
     }
 
     private XmlElement CreateElementWithValue(XmlDocument doc, string xmlName, string value)
@@ -165,10 +172,17 @@ public class Torrent
 
     public static Torrent CreateFromXml(XmlElement elem)
     {
+        return CreateFromXml(elem, elem["filepath"].InnerText);
+
+        
+    }
+
+    public static Torrent CreateFromXml(XmlElement elem, string filePath)
+    {
         Torrent t = new Torrent(elem["id"].InnerText);
         t.Name = elem["name"].InnerText;
         t.FileName = elem["filename"].InnerText;
-        t.FilePath = elem["filepath"].InnerText;
+        t.FilePath = filePath;
         t.Hash = elem["hash"].InnerText;
         t.Size = int.Parse(elem["size"].InnerText);
         t.Status = (eStatus) Enum.Parse(typeof(eStatus), elem["status"].InnerText);

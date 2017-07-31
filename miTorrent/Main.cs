@@ -35,8 +35,6 @@ namespace miTorrent
             }
 
             manager.StartListening();
-            
-
         }
 
         private void Logger_WriteLineE(string obj)
@@ -153,22 +151,38 @@ namespace miTorrent
             XmlDocument doc = new XmlDocument();
             Torrent torrent;
             ConnectInfo connectInfo = new ConnectInfo();
+            if (saveFileDialogFile.ShowDialog() != DialogResult.OK)
+                return;
             try
             {
                 doc.Load(openFileDialogTorrent.FileName);
                 XmlElement headerElement = doc["share"][ConnectInfo.XmlName];
                 XmlElement torrentElement = doc["share"][Torrent.XmlName];
-                torrent = Torrent.CreateFromXml(torrentElement);
+                
+                torrent = Torrent.CreateFromXml(torrentElement, saveFileDialogFile.FileName);
                 connectInfo = ConnectInfo.ParseXml(headerElement);
 
-                await manager.ConnectTorrentAsync(torrent, connectInfo);
+                addRow(torrent);
+
+                try
+                {
+                    await manager.ConnectTorrentAsync(torrent, connectInfo);
+                }
+                catch (SocketException ex)
+                {
+                    Logger.WriteLine("Unable to connect to specified host.");
+                }
+                
             }
             catch (System.IO.IOException ex)
             {
+                Logger.WriteLine("Couldn't open file. " + ex.ToString());
                 MessageBox.Show("Couldn't open file. " + ex.ToString());
+                
             }
             catch (XmlException ex)
             {
+                Logger.WriteLine("File has wrong format. " + ex.ToString());
                 MessageBox.Show("File has wrong format. " + ex.ToString());
             }
             

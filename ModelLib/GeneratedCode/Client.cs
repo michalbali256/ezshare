@@ -62,7 +62,8 @@ public class Client
             switch ((eMessage)b[0])
             {
                 case eMessage.Part:
-                    
+                    Logger.WriteLine("Request for part");
+
                     break;
                 default:
                     break;

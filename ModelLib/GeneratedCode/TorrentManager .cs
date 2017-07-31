@@ -28,8 +28,11 @@ public class TorrentManager : IEnumerable<Torrent>
             Torrent t = Torrent.CreateFromXml(e);
             tm.Add(t); //later automatic start
         }
+        if (xmlElement.GetElementsByTagName(ConnectInfo.XmlName).Count == 1)
+            tm.MyConnectInfo = ConnectInfo.ParseXml(xmlElement[ConnectInfo.XmlName]);
         return tm;
     }
+
     public const string XmlName = "torrentmanager";
     public XmlElement SaveToXml(XmlDocument doc)
     {
@@ -40,17 +43,20 @@ public class TorrentManager : IEnumerable<Torrent>
             torrentsElem.AppendChild(t.SaveToXml(doc));
         }
         elem.AppendChild(torrentsElem);
+
+        elem.AppendChild(MyConnectInfo.ShareHeaderToXml(doc));
         return elem;
     }
 
     public async void StartListening()
     {
-        Logger.WriteLine("Starting to listen");
+        
         await startListeningAsync();
     }
 
     private async Task startListeningAsync()
     {
+        Logger.WriteLine("Starting to listen at port : " + MyConnectInfo.Port);
         TcpListener lis = new TcpListener(new IPAddress(MyConnectInfo.IP), MyConnectInfo.Port);
         lis.Start();
         TcpClient c;
@@ -73,10 +79,10 @@ public class TorrentManager : IEnumerable<Torrent>
     }
 
     public virtual HashSet<Client> Clients
-	{
-		get;
-		set;
-	}
+    {
+        get;
+        set;
+    } = new HashSet<Client>();
 
 
 	public virtual void Add(Torrent t)

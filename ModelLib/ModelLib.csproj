@@ -44,6 +44,7 @@
     <Compile Include="GeneratedCode\ConnectInfo.cs" />
     <Compile Include="GeneratedCode\Listener.cs" />
     <Compile Include="GeneratedCode\Logger.cs" />
+    <Compile Include="GeneratedCode\PartFile.cs" />
     <Compile Include="GeneratedCode\Torrent.cs" />
     <Compile Include="GeneratedCode\TorrentManager .cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
