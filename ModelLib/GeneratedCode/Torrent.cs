@@ -94,12 +94,12 @@ public class Torrent
 		set;
 	}
 
+    public PartFile File;
     public long Size
     {
-        get;
-        private set;
+        get { return File.Size; }
     }
-    public string Hash { get; private set; }
+    
     public string Name { get; set; }
     public static string XmlName = "torrent";
 
@@ -107,13 +107,10 @@ public class Torrent
     {
         XmlElement e = doc.CreateElement(XmlName);
 
-        e.AppendChild(CreateElementWithValue(doc, "name", Name));
-        e.AppendChild(CreateElementWithValue(doc, "id", Id));
-        e.AppendChild(CreateElementWithValue(doc, "filename", FileName));
-        e.AppendChild(CreateElementWithValue(doc, "filepath", FilePath));
-        e.AppendChild(CreateElementWithValue(doc, "hash", Hash));
-        e.AppendChild(CreateElementWithValue(doc, "size", Size.ToString()));
-        e.AppendChild(CreateElementWithValue(doc, "status", Status.ToString()));
+        e.AppendElementWithValue("name", Name);
+        e.AppendElementWithValue("id", Id);
+        e.AppendElementWithValue("status", Status.ToString());
+        e.AppendChild(File.SaveToXml(doc));
 
         return e;
     }
@@ -127,12 +124,6 @@ public class Torrent
         
     }
 
-    private XmlElement CreateElementWithValue(XmlDocument doc, string xmlName, string value)
-    {
-        XmlElement elem = doc.CreateElement(xmlName);
-        elem.InnerText = value;
-        return elem;
-    }
     private static string hashToString(byte[] hash)
     {
         return BitConverter.ToString(hash).Replace("-", string.Empty);
@@ -153,18 +144,8 @@ public class Torrent
     {
         Torrent t = new Torrent();
         t.FilePath = path;
-        var split = t.FilePath.Split('\\');
-        t.FileName = split[split.Length - 1];
-        using (var md5 = MD5.Create())
-        {
-            using (var stream = File.OpenRead(t.FilePath))
-            {
-                t.Hash = hashToString(md5.ComputeHash(stream));
-            }
-        }
-
-        var fi = new FileInfo(path);
-        t.Size = fi.Length;
+        
+        
         t.Name = t.FileName;
         t.Status = eStatus.Seeding;
         return t;
@@ -183,11 +164,13 @@ public class Torrent
         t.Name = elem["name"].InnerText;
         t.FileName = elem["filename"].InnerText;
         t.FilePath = filePath;
-        t.Hash = elem["hash"].InnerText;
+        
         t.Size = int.Parse(elem["size"].InnerText);
         t.Status = (eStatus) Enum.Parse(typeof(eStatus), elem["status"].InnerText);
         return t;
     }
 
 }
+
+
 
