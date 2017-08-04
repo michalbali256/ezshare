@@ -66,24 +66,39 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
             Client mc = new Client(c);
             Logger.WriteLine("Client connected. IP: " + ((IPEndPoint)c.Client.RemoteEndPoint).Address.ToString());
 
+            
+            int remoteListeningPort = await mc.ReadInt();
+            Logger.WriteLine("Clients listening port: " + remoteListeningPort);
+            
+
             string id = await mc.ReceiveIdAsync();
             Logger.WriteLine("Requests torrent with id: " + id);
 
             if (torrents.ContainsKey(id) && (torrents[id].Status == Torrent.eStatus.Downloading || torrents[id].Status == Torrent.eStatus.Seeding))
             {
+                Logger.WriteLine("Sending OK for torrent with id: " + id);
                 await mc.SendByte((byte)Client.eRequestPartResponse.OK);
 
-                /*await mc.SendInt(torrents[id].Clients.Count);
-
-                foreach (Client cl in torrents[id].Clients)
+                if (await mc.ReadByteAsync() == (byte)eConnectType.RequestClients)
                 {
-                    await cl.SendBytesAsync(cl.ConnectInfo.IP);
-                    await cl.SendInt(cl.ConnectInfo.Port);
-                }*/
+                    Logger.WriteLine("Sending number of clients: " + torrents[id].Clients.Count);
+                    await mc.SendInt(torrents[id].Clients.Count);
 
-
+                    foreach (ConnectInfo cl in torrents[id].ClientsInfo)
+                    {
+                        Logger.WriteLine("Sending client IP: " + cl.IPToString());
+                        await mc.SendBytesAsync(cl.IP);
+                        Logger.WriteLine("Sending client port: " + cl.Port.ToString());
+                        await mc.SendInt(cl.Port);
+                    }
+                }
+                else
+                {
+                    Logger.WriteLine("Clients not requested");
+                }
                 torrents[id].AddClient(mc);
                 Clients.Add(mc);
+                torrents[id].ClientsInfo.Add(new ConnectInfo(((IPEndPoint)c.Client.RemoteEndPoint).Address.GetAddressBytes(), remoteListeningPort));
             }
             else
             {
@@ -116,37 +131,74 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
         t.Close();
     }
 
-    
+    enum eConnectType
+    {
+        RequestClients,
+        JustConnect
+    }
 
     public async Task ConnectTorrentAsync(Torrent torrent, ConnectInfo connectInfo)
     {
         Client cl = new Client();
         
         await cl.ConnectAsync(connectInfo);
-        
+
+        await cl.SendInt(MyConnectInfo.Port);
+
         await cl.SendIdAsync(torrent.Id);
 
         if ((Client.eRequestPartResponse)await cl.ReadByteAsync() != Client.eRequestPartResponse.OK)
         {
-            Logger.WriteLine("Torrent not available on host.");
+            Logger.WriteLine("Torrent not available on host: " + connectInfo.IPToString() + " port: " + connectInfo.Port.ToString());
             torrent.Status = Torrent.eStatus.Error;
             return;
         }
-
-        /*int count = await cl.ReadInt();
-
-        for(int i = 0; i < count; ++i)
+        Logger.WriteLine("Requesting clients");
+        await cl.SendByte((byte)eConnectType.RequestClients);
+        
+        int count = await cl.ReadInt();
+        Logger.WriteLine("Receiving info of additional clients. Number of clients:" + count);
+        for (int i = 0; i < count; ++i)
         {
-            await cl.SendBytesAsync(cl.ConnectInfo.IP);
-            await cl.SendInt(cl.ConnectInfo.Port);
-        }*/
+            Logger.WriteLine("Receiving IP");
+            byte[] ip = await cl.ReadBytes(4);
+            Logger.WriteLine("Receiving Port");
+            int port = await cl.ReadInt();
+            ConnectInfo info = new ConnectInfo(ip, port);
+
+            Logger.WriteLine("Trying to connect to client: " + info.IPToString() + " Port:" + port.ToString());
+
+            try
+            {
+                Client c = new Client();
+                await c.ConnectAsync(info);
+
+                await c.SendInt(info.Port);
+
+                await c.SendIdAsync(torrent.Id);
+                if ((Client.eRequestPartResponse)await c.ReadByteAsync() != Client.eRequestPartResponse.OK)
+                {
+                    Logger.WriteLine("Torrent not available on host: " + info.IPToString() + " port: " + info.Port.ToString());
+                    continue;
+                }
+
+                await c.SendByte((byte)eConnectType.JustConnect);
+
+                Logger.WriteLine("Successfully connected to client: " + c.ConnectInfo.IPToString() + " Port:" + port.ToString());
+                Clients.Add(c);
+                torrent.Clients.Add(c);
+                torrent.ClientsInfo.Add(info);
+            }
+            catch (SocketException)
+            { }
+        }
 
 
         Add(torrent);
 
         Clients.Add(cl);
         torrent.Clients.Add(cl);
-        
+        torrent.ClientsInfo.Add(connectInfo);
         await torrent.Download();
     }
 

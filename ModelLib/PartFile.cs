@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Xml;
 using System.Security.Cryptography;
+using System.Threading;
+
 
 public class WrongFileException : Exception
     {
@@ -62,6 +64,8 @@ public class PartFile : IDisposable
         }
     }
     Random rnd = new Random();
+    SemaphoreSlim sem = new SemaphoreSlim(1, 1);
+
 
     private void openFile(string filePath)
     {
@@ -124,10 +128,13 @@ public class PartFile : IDisposable
         return elem;
     }
 
+    
+
     internal async Task ReadPart(byte[] buffer, long part)
     {
         Seek(part);
         await stream.ReadAsync(buffer, 0, GetPartLength(part));
+        
     }
 
     public static PartFile FromXml(XmlElement elem, bool checkHash)
@@ -160,8 +167,21 @@ public class PartFile : IDisposable
 
     internal async Task WritePartAsync(byte[] buffer, long part)
     {
-        Seek(part);
-        await stream.WriteAsync(buffer, 0, GetPartLength(part));
+        await sem.WaitAsync();
+
+        try
+        {
+            Seek(part);
+            await stream.WriteAsync(buffer, 0, GetPartLength(part));
+        }
+        catch(Exception )
+        {
+            Logger.WriteLine("MISTAKE");
+        }
+        finally
+        {
+            sem.Release();
+        }
     }
 
     public XmlElement SaveToXmlShare(XmlDocument doc)

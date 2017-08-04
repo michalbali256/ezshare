@@ -22,7 +22,7 @@ namespace miTorrent
                 manager = TorrentManager.FromXml(doc[xmlName][TorrentManager.XmlName]);
                 Logger.WriteLine("Loaded settings.xml");
             }
-            catch (System.IO.IOException ex)
+            catch (System.IO.IOException)
             {
                 Logger.WriteLine("Loading settings.xml failed, using default settings");
                 manager = new TorrentManager();
@@ -177,7 +177,7 @@ namespace miTorrent
                     await manager.ConnectTorrentAsync(torrent, connectInfo);
 
                 }
-                catch (SocketException ex)
+                catch (SocketException)
                 {
                     Logger.WriteLine("Unable to connect to specified host.");
                 }

@@ -41,7 +41,7 @@ public class Torrent : IDisposable
         mc.Listen(this);
     }
 
-    
+    public HashSet<ConnectInfo> ClientsInfo { get; set; } = new HashSet<ConnectInfo>();
 
     public virtual eStatus Status
 	{

@@ -21,17 +21,12 @@ public class Client
     {
         this.client = c;
         stream = c.GetStream();
-        
-        /*byte[] buffer = new byte[1000];
-        str.Read(buffer, 0, 100);
-        StringBuilder b = new StringBuilder();
-        for (int i = 0; i < 100; ++i)
-            b.Append((char)buffer[i]);*/
+        ConnectInfo = new ConnectInfo(((IPEndPoint)c.Client.RemoteEndPoint).Address.GetAddressBytes(), ((IPEndPoint)c.Client.RemoteEndPoint).Port);
     }
 
     public async Task ConnectAsync(ConnectInfo info)
     {
-        ConnectInfo = info;
+        ConnectInfo = new ConnectInfo(info.IP, info.Port);
         await client.ConnectAsync(new IPAddress(info.IP), info.Port);
         stream = client.GetStream();
     }
@@ -54,6 +49,22 @@ public class Client
     {
         Part,
 
+    }
+
+    
+
+    public async Task<byte[]> ReadBytes(int count)
+    {
+        byte[] bytes = new byte[count];
+        int rd = 0;
+        while (rd < count)
+        {
+            int now = await stream.ReadAsync(bytes, rd, count - rd);
+            rd += now;
+            if (now == 0)
+                throw new InvalidOperationException("Connection ended.");
+        }
+        return bytes;
     }
 
     public async Task<long> ReadLong()
@@ -99,7 +110,7 @@ public class Client
                     if (torrent.File.PartStatus[part] != PartFile.ePartStatus.Available)
                     {
                         Logger.WriteLine("Listener: Part " + part + " not available, sending NotAvailable flag.");
-                        await SendByte((byte)eRequestPartResponse.NeverAvailable);
+                        await SendByte((byte)eRequestPartResponse.NotAvailable);
                         break;
                     }
                     Logger.WriteLine("Listener: Sending OK response for part: " + part);
@@ -107,6 +118,7 @@ public class Client
 
                     byte[] buffer = new byte[torrent.File.GetPartLength(part)];
                     Logger.WriteLine("Listener: Reading part " + part + " from disc");
+
                     await torrent.File.ReadPart(buffer, part);
                     Logger.WriteLine("Listener: Sending Part" + part);
                     await SendBytesAsync(buffer);

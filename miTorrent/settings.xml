@@ -1,0 +1,10 @@
+<settings>
+  <torrentmanager>
+    <torrents>
+    </torrents>
+    <connectinfo>
+      <ip>192.168.1.102</ip>
+      <port>10421</port>
+    </connectinfo>
+  </torrentmanager>
+</settings>
