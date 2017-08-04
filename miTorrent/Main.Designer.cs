@@ -55,6 +55,7 @@
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.listBoxLog = new System.Windows.Forms.ListBox();
             this.saveFileDialogFile = new System.Windows.Forms.SaveFileDialog();
+            this.timerUpdate = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.contextMenuStripRow.SuspendLayout();
@@ -266,6 +267,10 @@
             this.listBoxLog.Size = new System.Drawing.Size(757, 95);
             this.listBoxLog.TabIndex = 5;
             // 
+            // timerUpdate
+            // 
+            this.timerUpdate.Tick += new System.EventHandler(this.timerUpdate_Tick);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -318,6 +323,7 @@
         private System.Windows.Forms.MenuStrip menuStrip;
         private System.Windows.Forms.ListBox listBoxLog;
         private System.Windows.Forms.SaveFileDialog saveFileDialogFile;
+        private System.Windows.Forms.Timer timerUpdate;
     }
 }
 

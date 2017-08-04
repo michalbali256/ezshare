@@ -8,7 +8,7 @@ using System.Xml;
 
 namespace miTorrent
 {
-    public partial class Main : Form
+    public partial class Main : Form, IDisposable
     {
         public Main()
         {
@@ -62,9 +62,11 @@ namespace miTorrent
 
         private void updateRow(DataGridViewRow r)
         {
-            Torrent t = (Torrent)r.Tag;
+            Torrent t = r.Tag as Torrent;
+            if (t == null)
+                return;
             r.Cells[0].Value = t.Name;
-
+            r.Cells[1].Value = t.ProgressOfFile.ToString() + "/" + t.NumberOfParts; ;
             r.Cells[2].Value = t.Status.ToString();
             r.Cells[3].Value = normalizeSize(t.Size);
         }
@@ -97,7 +99,7 @@ namespace miTorrent
 
         private void Main_Load(object sender, EventArgs e)
         {
-            
+            timerUpdate.Enabled = true;
         }
 
         private void propertiesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -119,7 +121,8 @@ namespace miTorrent
             {
                 var hti = dataGridView.HitTest(e.X, e.Y);
                 dataGridView.ClearSelection();
-                dataGridView.Rows[hti.RowIndex].Selected = true;
+                if(hti.RowIndex >= 0 && hti.RowIndex < dataGridView.Rows.Count)
+                    dataGridView.Rows[hti.RowIndex].Selected = true;
             }
         }
 
@@ -133,7 +136,7 @@ namespace miTorrent
             XmlDocument doc = new XmlDocument();
             XmlElement documentElement = doc.CreateElement("share");
             documentElement.AppendChild(manager.MyConnectInfo.ShareHeaderToXml(doc));
-            documentElement.AppendChild(t.SaveToXml(doc));
+            documentElement.AppendChild(t.SaveToXmlShare(doc));
 
             doc.AppendChild(documentElement);
             doc.Save(saveFileDialogShare.FileName);
@@ -141,7 +144,7 @@ namespace miTorrent
 
         private void toolStripButtonStart_Click(object sender, EventArgs e)
         {
-            manager.StartListening();
+            
         }
 
         private async void toolStripButtonConnect_Click(object sender, EventArgs e)
@@ -159,7 +162,7 @@ namespace miTorrent
                 XmlElement headerElement = doc["share"][ConnectInfo.XmlName];
                 XmlElement torrentElement = doc["share"][Torrent.XmlName];
                 
-                torrent = Torrent.CreateFromXml(torrentElement, saveFileDialogFile.FileName);
+                torrent = Torrent.CreateFromXmlShare(torrentElement, saveFileDialogFile.FileName);
                 connectInfo = ConnectInfo.ParseXml(headerElement);
 
                 addRow(torrent);
@@ -173,6 +176,7 @@ namespace miTorrent
                     Logger.WriteLine("Unable to connect to specified host.");
                 }
                 
+
             }
             catch (System.IO.IOException ex)
             {
@@ -195,6 +199,11 @@ namespace miTorrent
                 manager.Remove((Torrent)r.Tag);
                 dataGridView.Rows.Remove(r);
             }
+        }
+
+        private void timerUpdate_Tick(object sender, EventArgs e)
+        {
+            updateTable();
         }
     }
 }

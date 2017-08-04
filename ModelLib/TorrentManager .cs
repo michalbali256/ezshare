@@ -9,7 +9,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Collections;
 
-public class TorrentManager : IEnumerable<Torrent>
+public class TorrentManager : IEnumerable<Torrent>, IDisposable
 {
     Dictionary<string, Torrent> torrents = new Dictionary<string, Torrent>();
 
@@ -93,6 +93,7 @@ public class TorrentManager : IEnumerable<Torrent>
     public virtual void Remove(Torrent t)
     {
         torrents.Remove(t.Id);
+        t.Close();
     }
 
     
@@ -109,6 +110,8 @@ public class TorrentManager : IEnumerable<Torrent>
         //use try catch - not connecting here is not an error
 
         Add(torrent);
+        Clients.Add(cl);
+        torrent.Clients.Add(cl);
         
         await torrent.Download();
     }
@@ -121,6 +124,12 @@ public class TorrentManager : IEnumerable<Torrent>
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
+    }
+
+    public void Dispose()
+    {
+        foreach (Torrent t in this)
+            t.Dispose();
     }
 }
 

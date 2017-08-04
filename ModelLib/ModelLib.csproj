@@ -40,14 +40,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GeneratedCode\Client.cs" />
-    <Compile Include="GeneratedCode\ConnectInfo.cs" />
-    <Compile Include="GeneratedCode\Listener.cs" />
-    <Compile Include="GeneratedCode\Logger.cs" />
-    <Compile Include="GeneratedCode\PartFile.cs" />
-    <Compile Include="GeneratedCode\Torrent.cs" />
-    <Compile Include="GeneratedCode\TorrentManager .cs" />
-    <Compile Include="GeneratedCode\XmlExtension.cs" />
+    <Compile Include="Client.cs" />
+    <Compile Include="ConnectInfo.cs" />
+    <Compile Include="Listener.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="PartFile.cs" />
+    <Compile Include="Torrent.cs" />
+    <Compile Include="TorrentManager .cs" />
+    <Compile Include="XmlExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
