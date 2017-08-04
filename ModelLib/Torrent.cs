@@ -31,13 +31,14 @@ public class Torrent : IDisposable
         Downloading,
         Paused,
         Stopped,
-        Seeding
+        Seeding,
+        Error
     }
 
     internal void AddClient(Client mc)
     {
         Clients.Add(mc);
-        mc.Listen(File);
+        mc.Listen(this);
     }
 
     
@@ -79,7 +80,7 @@ public class Torrent : IDisposable
 
     public long ProgressOfFile
 	{
-		get { return File.Progress; }
+		get { return File == null ? 0 : File.Progress; }
 	}
 
 	public virtual List<Client> Clients
@@ -91,11 +92,11 @@ public class Torrent : IDisposable
     public PartFile File;
     public long Size
     {
-        get { return File.Size; }
+        get { return File == null ? 0 : File.Size; }
     }
     
     public string Name { get; set; }
-    public long NumberOfParts { get { return File.NumberOfParts; } }
+    public long NumberOfParts { get { return File == null ? 0 : File.NumberOfParts; } }
 
     public static string XmlName = "torrent";
 
@@ -106,7 +107,8 @@ public class Torrent : IDisposable
         e.AppendElementWithValue("name", Name);
         e.AppendElementWithValue("id", Id);
         e.AppendElementWithValue("status", Status.ToString());
-        e.AppendChild(File.SaveToXml(doc));
+        if(Status != eStatus.Error)
+            e.AppendChild(File.SaveToXml(doc));
 
         return e;
     }
@@ -122,9 +124,11 @@ public class Torrent : IDisposable
         return e;
     }
 
+
+    bool downloadIsRunning = false;
     internal async Task Download()
     {
-        
+        downloadIsRunning = true;
         Status = Torrent.eStatus.Downloading;
         Logger.WriteLine("Starting download:" + Name);
         long part;
@@ -155,35 +159,53 @@ public class Torrent : IDisposable
             tasks.Remove(t);
 
             part = File.GetPartIndex(PartFile.ePartStatus.Missing);
-            if (part != -1)
+            if (part != -1 && Status == eStatus.Downloading)
             {
                 File.PartStatus[part] = PartFile.ePartStatus.Processing;
                 tasks.Add(clientEnded.DownloadPart(File, part), Tuple.Create(clientEnded, part));
             }
         }
-        Status = Torrent.eStatus.Seeding;
+        if(Status == eStatus.Downloading && ProgressOfFile == NumberOfParts)
+            Status = Torrent.eStatus.Seeding;
+
+        downloadIsRunning = false;
+    }
+
+    public void Pause()
+    {
+        Status = eStatus.Paused;
+    }
+
+    public async void Start()
+    {
+        if (Status == eStatus.Error)
+        {
+            Logger.WriteLine("Cannot start torrent with error");
+            return;
+        }
+
+        if (ProgressOfFile == NumberOfParts)
+        {
+            Status = eStatus.Seeding;
+        }
+        else
+        {
+            Status = eStatus.Downloading;
+            if (!downloadIsRunning)
+                await Download();
+        }
+
     }
 
     internal void Close()
     {
-        File.Close();
+        File?.Close();
     }
 
     private static string hashToString(byte[] hash)
     {
         return BitConverter.ToString(hash).Replace("-", string.Empty);
     }
-
-
-	public virtual void Start()
-	{
-		throw new System.NotImplementedException();
-	}
-
-	public virtual void Pause()
-	{
-		throw new System.NotImplementedException();
-	}
 
     public static Torrent CreateFromPath(string path)
     {
@@ -200,9 +222,19 @@ public class Torrent : IDisposable
         Torrent t = new Torrent(elem["id"].InnerText);
         t.Name = elem["name"].InnerText;
         t.Status = (eStatus)Enum.Parse(typeof(eStatus), elem["status"].InnerText);
-
-        t.File = PartFile.FromXml(elem[PartFile.XmlName], t.Status == eStatus.Seeding); //check hash only if the the file is already downloaded - otherwise the hash must be different
-
+        if(t.Status != eStatus.Error)
+            try
+            {
+                t.File = PartFile.FromXml(elem[PartFile.XmlName], t.Status == eStatus.Seeding); //check hash only if the the file is already downloaded - otherwise the hash must be different
+            }
+            catch (WrongFileException)
+            {
+                t.Status = eStatus.Error;
+            }
+            catch (IOException)
+            {
+                t.Status = eStatus.Error;
+            }
         return t;
     }
 

@@ -31,9 +31,12 @@ public class Client
 
     public async Task ConnectAsync(ConnectInfo info)
     {
+        ConnectInfo = info;
         await client.ConnectAsync(new IPAddress(info.IP), info.Port);
         stream = client.GetStream();
     }
+
+    public ConnectInfo ConnectInfo { get; private set; }
 
     /// <summary>
     /// Sends id.
@@ -73,39 +76,58 @@ public class Client
         await stream.WriteAsync(BitConverter.GetBytes(integer), 0, 8);
     }
 
-    internal async Task Listen(PartFile file)
+    internal async Task Listen(Torrent torrent)
     {
         for (;;)
         {
             byte[] b = new byte[1];
-            Logger.WriteLine("Client listening for requests.");
+            Logger.WriteLine("Listener: Client listening for requests.");
             await stream.ReadAsync(b, 0, 1);
             switch ((eMessage)b[0])
             {
                 case eMessage.Part:
-                    Logger.WriteLine("Request for part accepted");
-                    long part = await ReadLong();
-                    if (file.PartStatus[part] != PartFile.ePartStatus.Available)
+                    if (torrent.Status != Torrent.eStatus.Seeding && torrent.Status != Torrent.eStatus.Downloading)
                     {
-                        Logger.WriteLine("Part not available, sending NotAvailable flag.");
-                        await SendByte((byte)eRequestPartResponse.NotAvailable);
+                        Logger.WriteLine("Listener: Torrent is paused or stopped or error, sending NeverAvailable flag.");
+                        await SendByte((byte)eRequestPartResponse.NeverAvailable);
                         break;
                     }
-                    Logger.WriteLine("Sending OK response");
+
+                    Logger.WriteLine("Listener: Request for part accepted.");
+                    long part = await ReadLong();
+                    Logger.WriteLine("Listener: Part number:" + part);
+                    if (torrent.File.PartStatus[part] != PartFile.ePartStatus.Available)
+                    {
+                        Logger.WriteLine("Listener: Part " + part + " not available, sending NotAvailable flag.");
+                        await SendByte((byte)eRequestPartResponse.NeverAvailable);
+                        break;
+                    }
+                    Logger.WriteLine("Listener: Sending OK response for part: " + part);
                     await SendByte((byte)eRequestPartResponse.OK);
 
-                    byte[] buffer = new byte[file.GetPartLength(part)];
-                    Logger.WriteLine("Reading part from disc");
-                    await file.ReadPart(buffer, part);
-                    Logger.WriteLine("Sending Part");
+                    byte[] buffer = new byte[torrent.File.GetPartLength(part)];
+                    Logger.WriteLine("Listener: Reading part " + part + " from disc");
+                    await torrent.File.ReadPart(buffer, part);
+                    Logger.WriteLine("Listener: Sending Part" + part);
                     await SendBytesAsync(buffer);
 
                     break;
                 default:
-                    throw new Exception("Wrong request");
-                    
+                    throw new Exception("Listener: Wrong request");
             }
         }
+    }
+
+    internal async Task<byte> ReadByteAsync()
+    {
+        byte[] buffer = new byte[1];
+        await stream.ReadAsync(buffer, 0, 1);
+        return buffer[0];
+    }
+
+    internal void Close()
+    {
+        stream.Close(100);
     }
 
     public async Task<string> ReceiveIdAsync()
@@ -119,22 +141,11 @@ public class Client
         return b.ToString();
     }
 
-
-    public virtual void SendFileInfo()
-	{
-		throw new System.NotImplementedException();
-
-        TcpClient cl = new TcpClient("192.168.1.100", 9696);
-        var ns = cl.GetStream();
-        string s = "toto je velmi dlha sprava ktoru by som si chcel poslad to svojho pocitaca mala by mat 100 znakov alen neviem ze ake dlhe toto je bal babnasd";
-
-        byte[] buffer = new byte[1000];
-        for (int i = 0; i < 100; ++i)
-            buffer[i] = (byte)s[i];
-
-        ns.Write(buffer, 0, 100);
-        ns.Flush();
-        ns.Close();
+    public async Task<int> ReadInt()
+    {
+        byte[] buffer = new byte[4];
+        await stream.ReadAsync(buffer, 0, 4);
+        return BitConverter.ToInt32(buffer, 0);
     }
 
 	public virtual void SendTorrentInfo()
@@ -150,7 +161,8 @@ public class Client
     public enum eRequestPartResponse
     {
         NotAvailable,
-        OK
+        OK,
+        NeverAvailable        
     }
 
     public async Task<eRequestPartResponse> DownloadPart(PartFile file, long part)
@@ -163,12 +175,19 @@ public class Client
         byte[] sendPart = BitConverter.GetBytes(part);
         await stream.WriteAsync(sendPart, 0, sendPart.Length);
 
-        await stream.ReadAsync(sendPart, 0, 1);
-
+        int rdResponse = 0;
+        rdResponse = await stream.ReadAsync(sendPart, 0, 1);
+        if (rdResponse == 0)
+        {
+            Logger.WriteLine("Connection ended" + part);
+            return eRequestPartResponse.NotAvailable;
+        }
         eRequestPartResponse response = (eRequestPartResponse)Enum.Parse(typeof(eRequestPartResponse), sendPart[0].ToString());
-        if (response == eRequestPartResponse.NotAvailable)
+        if (response != eRequestPartResponse.OK)
+        {
+            Logger.WriteLine("Part " + response.ToString());
             return response;
-
+        }
         int count = file.GetPartLength(part);
         if (count > 1024 * 1024 || count < 0)
             throw new Exception();
@@ -179,7 +198,10 @@ public class Client
         int rd = 0;
         while (rd < count)
         {
-            rd += await stream.ReadAsync(buffer, rd, count - rd);
+            int rdNow = await stream.ReadAsync(buffer, rd, count - rd);
+            if (rdNow == 0)
+                return eRequestPartResponse.NeverAvailable;
+            rd += rdNow;
             if (++c > 1000)
                 throw new Exception("BADREAD");
         }

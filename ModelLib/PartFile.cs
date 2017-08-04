@@ -147,6 +147,8 @@ public class PartFile : IDisposable
             file.PartStatus[i] = (ePartStatus) Enum.Parse(typeof(ePartStatus), partstatus[i].ToString());
         }
 
+        
+
         return file;
     }
 

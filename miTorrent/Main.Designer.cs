@@ -83,7 +83,7 @@
             this.dataGridView.RowHeadersVisible = false;
             this.dataGridView.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView.Size = new System.Drawing.Size(757, 314);
+            this.dataGridView.Size = new System.Drawing.Size(757, 149);
             this.dataGridView.TabIndex = 0;
             this.dataGridView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dataGridView_MouseDown);
             // 
@@ -127,7 +127,7 @@
             // 
             // statusStrip1
             // 
-            this.statusStrip1.Location = new System.Drawing.Point(0, 488);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 469);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(781, 22);
             this.statusStrip1.TabIndex = 1;
@@ -202,6 +202,7 @@
             this.toolStripButtonPause.Name = "toolStripButtonPause";
             this.toolStripButtonPause.Size = new System.Drawing.Size(23, 22);
             this.toolStripButtonPause.Text = "Pause";
+            this.toolStripButtonPause.Click += new System.EventHandler(this.toolStripButtonPause_Click);
             // 
             // toolStripButton3
             // 
@@ -262,9 +263,9 @@
             // listBoxLog
             // 
             this.listBoxLog.FormattingEnabled = true;
-            this.listBoxLog.Location = new System.Drawing.Point(12, 388);
+            this.listBoxLog.Location = new System.Drawing.Point(12, 223);
             this.listBoxLog.Name = "listBoxLog";
-            this.listBoxLog.Size = new System.Drawing.Size(757, 95);
+            this.listBoxLog.Size = new System.Drawing.Size(757, 238);
             this.listBoxLog.TabIndex = 5;
             // 
             // timerUpdate
@@ -275,7 +276,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(781, 510);
+            this.ClientSize = new System.Drawing.Size(781, 491);
             this.Controls.Add(this.listBoxLog);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);

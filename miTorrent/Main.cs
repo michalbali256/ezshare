@@ -13,7 +13,7 @@ namespace miTorrent
         public Main()
         {
             InitializeComponent();
-            Logger.WriteLineE += Logger_WriteLineE;
+            Logger.OnWriteLine += Logger_WriteLineE;
             Logger.WriteLine("Loading settings.xml");
             XmlDocument doc = new XmlDocument();
             try
@@ -94,7 +94,7 @@ namespace miTorrent
             settings.AppendChild(manager.SaveToXml(doc));
             doc.AppendChild(settings);
             doc.Save(settingsFile);
-            
+            Logger.sw.Close();
         }
 
         private void Main_Load(object sender, EventArgs e)
@@ -144,7 +144,11 @@ namespace miTorrent
 
         private void toolStripButtonStart_Click(object sender, EventArgs e)
         {
-            
+            foreach (DataGridViewRow r in dataGridView.SelectedRows)
+            {
+                Torrent t = r.Tag as Torrent;
+                t.Start();
+            }
         }
 
         private async void toolStripButtonConnect_Click(object sender, EventArgs e)
@@ -165,17 +169,28 @@ namespace miTorrent
                 torrent = Torrent.CreateFromXmlShare(torrentElement, saveFileDialogFile.FileName);
                 connectInfo = ConnectInfo.ParseXml(headerElement);
 
+                
                 addRow(torrent);
 
                 try
                 {
                     await manager.ConnectTorrentAsync(torrent, connectInfo);
+
                 }
                 catch (SocketException ex)
                 {
                     Logger.WriteLine("Unable to connect to specified host.");
                 }
-                
+                catch (AggregateException ex)
+                {
+                    Logger.WriteLine("Aggregate exception caught.");
+                    Logger.WriteLine(ex.InnerExceptions[0].Message);
+
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteLine(ex.Message);
+                }
 
             }
             catch (System.IO.IOException ex)
@@ -204,6 +219,15 @@ namespace miTorrent
         private void timerUpdate_Tick(object sender, EventArgs e)
         {
             updateTable();
+        }
+
+        private void toolStripButtonPause_Click(object sender, EventArgs e)
+        {
+            foreach (DataGridViewRow r in dataGridView.SelectedRows)
+            {
+                Torrent t = r.Tag as Torrent;
+                t?.Pause();
+            }
         }
     }
 }

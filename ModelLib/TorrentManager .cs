@@ -48,9 +48,8 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
         return elem;
     }
 
-    public async void StartListening()
+    public async Task StartListening()
     {
-        
         await startListeningAsync();
     }
 
@@ -70,10 +69,31 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
             string id = await mc.ReceiveIdAsync();
             Logger.WriteLine("Requests torrent with id: " + id);
 
+            if (torrents.ContainsKey(id) && (torrents[id].Status == Torrent.eStatus.Downloading || torrents[id].Status == Torrent.eStatus.Seeding))
+            {
+                await mc.SendByte((byte)Client.eRequestPartResponse.OK);
 
-            torrents[id].AddClient(mc);
-            Clients.Add(mc);
+                /*await mc.SendInt(torrents[id].Clients.Count);
 
+                foreach (Client cl in torrents[id].Clients)
+                {
+                    await cl.SendBytesAsync(cl.ConnectInfo.IP);
+                    await cl.SendInt(cl.ConnectInfo.Port);
+                }*/
+
+
+                torrents[id].AddClient(mc);
+                Clients.Add(mc);
+            }
+            else
+            {
+                Logger.WriteLine("Requested torrent is unavailable");
+
+                await mc.SendByte((byte)Client.eRequestPartResponse.NeverAvailable);
+
+
+                mc.Close();
+            }
             
         }
     }
@@ -106,10 +126,24 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
         
         await cl.SendIdAsync(torrent.Id);
 
-        //request for additional seeds and connect them//
-        //use try catch - not connecting here is not an error
+        if ((Client.eRequestPartResponse)await cl.ReadByteAsync() != Client.eRequestPartResponse.OK)
+        {
+            Logger.WriteLine("Torrent not available on host.");
+            torrent.Status = Torrent.eStatus.Error;
+            return;
+        }
+
+        /*int count = await cl.ReadInt();
+
+        for(int i = 0; i < count; ++i)
+        {
+            await cl.SendBytesAsync(cl.ConnectInfo.IP);
+            await cl.SendInt(cl.ConnectInfo.Port);
+        }*/
+
 
         Add(torrent);
+
         Clients.Add(cl);
         torrent.Clients.Add(cl);
         
@@ -133,3 +167,11 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
     }
 }
 
+public class TorrentNotAvailableException : Exception
+{
+
+    public TorrentNotAvailableException(string v) : base(v)
+    {
+        
+    }
+}
