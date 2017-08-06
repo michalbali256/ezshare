@@ -10,13 +10,18 @@ public class Client
     private TcpClient client;
     private NetworkStream stream;
 
+    /// <summary>
+    /// Constructs new Client that can be connected afterwards.
+    /// </summary>
     public Client()
     {
         client = new TcpClient();
-        
-        
     }
 
+    /// <summary>
+    /// Creates new Client from existing TcpClient
+    /// </summary>
+    /// <param name="c">TcpClient that should be connected.</param>
     public Client(TcpClient c)
     {
         this.client = c;
@@ -24,6 +29,11 @@ public class Client
         ConnectInfo = new ConnectInfo(((IPEndPoint)c.Client.RemoteEndPoint).Address.GetAddressBytes(), ((IPEndPoint)c.Client.RemoteEndPoint).Port);
     }
 
+    /// <summary>
+    /// Connects Client using ConnectInfo (IP and port)
+    /// </summary>
+    /// <param name="info"></param>
+    /// <returns></returns>
     public async Task ConnectAsync(ConnectInfo info)
     {
         ConnectInfo = new ConnectInfo(info.IP, info.Port);
@@ -31,6 +41,9 @@ public class Client
         stream = client.GetStream();
     }
 
+    /// <summary>
+    /// IP and port of remote end point.
+    /// </summary>
     public ConnectInfo ConnectInfo { get; private set; }
 
     /// <summary>
@@ -45,49 +58,88 @@ public class Client
         await stream.WriteAsync(buffer, 0, 32);
     }
 
+    /// <summary>
+    /// Represents types of requests that can be sent
+    /// </summary>
     enum eMessage
     {
         Part,
 
     }
 
-    
-
-    public async Task<byte[]> ReadBytes(int count)
+    /// <summary>
+    /// Asynchronously reads bytes from remote client.
+    /// </summary>
+    /// <param name="count">The number of bytes to expect</param>
+    /// <returns></returns>
+    public async Task<byte[]> ReadBytesAsync(int count)
     {
         byte[] bytes = new byte[count];
         int rd = 0;
+        //reads until expected number of bytes were read - sometimes it takes more than one NetworkStream.ReadAsync to read it all.
         while (rd < count)
         {
             int now = await stream.ReadAsync(bytes, rd, count - rd);
             rd += now;
-            if (now == 0)
+            if (now == 0)//if 0 bytes were read, it means connection is bad
                 throw new InvalidOperationException("Connection ended.");
         }
         return bytes;
     }
-
-    public async Task<long> ReadLong()
+    public async Task<long> ReadLongAsync()
     {
-        byte[] buffer = new byte[8];
-        await stream.ReadAsync(buffer, 0, 8);
-        return BitConverter.ToInt64(buffer, 0);
+        return BitConverter.ToInt64(await ReadBytesAsync(8), 0);
+    }
+    public async Task<byte> ReadByteAsync()
+    {
+        byte[] buffer = new byte[1];
+        await stream.ReadAsync(buffer, 0, 1);
+        return buffer[0];
+    }
+    public async Task<int> ReadIntAsync()
+    {
+        return BitConverter.ToInt32(await ReadBytesAsync(4), 0);
+    }
+    /// <summary>
+    /// Reads 32 bytes long Id from remote client
+    /// </summary>
+    /// <returns>Task that returns 32 bytes long string representing id</returns>
+    public async Task<string> ReadIdAsync()
+    {
+        byte[] buffer = new byte[32];
+        await stream.ReadAsync(buffer, 0, 32);
+
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < 32; ++i)
+            b.Append((char)buffer[i]);
+        return b.ToString();
     }
 
-    public async Task SendByte(byte b)
+
+    public async Task SendByteAsync(byte b)
     {
         await stream.WriteAsync(BitConverter.GetBytes(b), 0, 1);
     }
-    public async Task SendInt(int integer)
+    public async Task SendIntAsync(int integer)
     {
         await stream.WriteAsync(BitConverter.GetBytes(integer), 0, 4);
     }
-    public async Task SendLong(long integer)
+    public async Task SendLongAsync(long integer)
     {
         await stream.WriteAsync(BitConverter.GetBytes(integer), 0, 8);
     }
+    public async Task SendBytesAsync(byte[] buffer)
+    {
+        await stream.WriteAsync(buffer, 0, buffer.Length);
+    }
 
-    internal async Task Listen(Torrent torrent)
+
+    /// <summary>
+    /// Endless loop listening for requests from other side.
+    /// </summary>
+    /// <param name="torrent">Torrent, to which is this client assigned.</param>
+    /// <returns></returns>
+    internal async Task ListenAsync(Torrent torrent)
     {
         for (;;)
         {
@@ -100,21 +152,21 @@ public class Client
                     if (torrent.Status != Torrent.eStatus.Seeding && torrent.Status != Torrent.eStatus.Downloading)
                     {
                         Logger.WriteLine("Listener: Torrent is paused or stopped or error, sending NeverAvailable flag.");
-                        await SendByte((byte)eRequestPartResponse.NeverAvailable);
+                        await SendByteAsync((byte)eRequestPartResponse.NeverAvailable);
                         break;
                     }
 
                     Logger.WriteLine("Listener: Request for part accepted.");
-                    long part = await ReadLong();
+                    long part = await ReadLongAsync();
                     Logger.WriteLine("Listener: Part number:" + part);
                     if (torrent.File.PartStatus[part] != PartFile.ePartStatus.Available)
                     {
                         Logger.WriteLine("Listener: Part " + part + " not available, sending NotAvailable flag.");
-                        await SendByte((byte)eRequestPartResponse.NotAvailable);
+                        await SendByteAsync((byte)eRequestPartResponse.NotAvailable);
                         break;
                     }
                     Logger.WriteLine("Listener: Sending OK response for part: " + part);
-                    await SendByte((byte)eRequestPartResponse.OK);
+                    await SendByteAsync((byte)eRequestPartResponse.OK);
 
                     byte[] buffer = new byte[torrent.File.GetPartLength(part)];
                     Logger.WriteLine("Listener: Reading part " + part + " from disc");
@@ -130,45 +182,17 @@ public class Client
         }
     }
 
-    internal async Task<byte> ReadByteAsync()
-    {
-        byte[] buffer = new byte[1];
-        await stream.ReadAsync(buffer, 0, 1);
-        return buffer[0];
-    }
 
+    /// <summary>
+    /// Releases resources and closes the connection.
+    /// </summary>
     internal void Close()
     {
         stream.Close(100);
     }
 
-    public async Task<string> ReceiveIdAsync()
-    {
-        byte[] buffer = new byte[32];
-        await stream.ReadAsync(buffer, 0, 32);
 
-        StringBuilder b = new StringBuilder();
-        for (int i = 0; i < 32; ++i)
-            b.Append((char)buffer[i]);
-        return b.ToString();
-    }
 
-    public async Task<int> ReadInt()
-    {
-        byte[] buffer = new byte[4];
-        await stream.ReadAsync(buffer, 0, 4);
-        return BitConverter.ToInt32(buffer, 0);
-    }
-
-	public virtual void SendTorrentInfo()
-	{
-		throw new System.NotImplementedException();
-	}
-
-	public async Task SendBytesAsync(byte[] buffer)
-	{
-        await stream.WriteAsync(buffer, 0, buffer.Length);
-	}
 
     public enum eRequestPartResponse
     {
@@ -176,12 +200,17 @@ public class Client
         OK,
         NeverAvailable        
     }
-
+    /// <summary>
+    /// Downloads one part from connected client and writes it into specified file
+    /// </summary>
+    /// <param name="file">PartFile into which will be the part written</param>
+    /// <param name="part">Number of downloaded part</param>
+    /// <returns>Returns eRequestPartResponse, which indicates whether process went well or the part was not available</returns>
     public async Task<eRequestPartResponse> DownloadPart(PartFile file, long part)
     {
         Logger.WriteLine("Sending request for part");
 
-        await SendByte((byte)eMessage.Part);
+        await SendByteAsync((byte)eMessage.Part);
 
         Logger.WriteLine("Sending part number: " + part);
         byte[] sendPart = BitConverter.GetBytes(part);
@@ -189,7 +218,7 @@ public class Client
 
         int rdResponse = 0;
         rdResponse = await stream.ReadAsync(sendPart, 0, 1);
-        if (rdResponse == 0)
+        if (rdResponse == 0)//if readASync returns 0, the connection ended.
         {
             Logger.WriteLine("Connection ended" + part);
             return eRequestPartResponse.NotAvailable;
@@ -201,11 +230,11 @@ public class Client
             return response;
         }
         int count = file.GetPartLength(part);
-        if (count > 1024 * 1024 || count < 0)
-            throw new Exception();
+
         byte[] buffer = new byte[count];
         Logger.WriteLine("Reading content content of part:" + part);
 
+        //reads until expected number of bytes were read - sometimes it takes more than one NetworkStream.ReadAsync to read it all.
         int c = 0;
         int rd = 0;
         while (rd < count)
@@ -219,28 +248,12 @@ public class Client
         }
         
 
+        //writes part into the file
         Logger.WriteLine("Writing part " + part + "of file " + file.FileName);
         await file.WritePartAsync(buffer, part);
 
-        
 
         return eRequestPartResponse.OK;
     }
-
-	public virtual void RequestTorrentInfo()
-	{
-		throw new System.NotImplementedException();
-	}
-
-	public virtual void RequestFileInfo()
-	{
-		throw new System.NotImplementedException();
-	}
-
-	public virtual void RequestPart()
-	{
-		throw new System.NotImplementedException();
-	}
-
 }
 

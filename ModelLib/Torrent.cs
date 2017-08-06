@@ -38,7 +38,7 @@ public class Torrent : IDisposable
     internal void AddClient(Client mc)
     {
         Clients.Add(mc);
-        mc.Listen(this);
+        mc.ListenAsync(this);
     }
 
     public HashSet<ConnectInfo> ClientsInfo { get; set; } = new HashSet<ConnectInfo>();

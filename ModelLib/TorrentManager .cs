@@ -67,29 +67,29 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
             Logger.WriteLine("Client connected. IP: " + ((IPEndPoint)c.Client.RemoteEndPoint).Address.ToString());
 
             
-            int remoteListeningPort = await mc.ReadInt();
+            int remoteListeningPort = await mc.ReadIntAsync();
             Logger.WriteLine("Clients listening port: " + remoteListeningPort);
             
 
-            string id = await mc.ReceiveIdAsync();
+            string id = await mc.ReadIdAsync();
             Logger.WriteLine("Requests torrent with id: " + id);
 
             if (torrents.ContainsKey(id) && (torrents[id].Status == Torrent.eStatus.Downloading || torrents[id].Status == Torrent.eStatus.Seeding))
             {
                 Logger.WriteLine("Sending OK for torrent with id: " + id);
-                await mc.SendByte((byte)Client.eRequestPartResponse.OK);
+                await mc.SendByteAsync((byte)Client.eRequestPartResponse.OK);
 
                 if (await mc.ReadByteAsync() == (byte)eConnectType.RequestClients)
                 {
                     Logger.WriteLine("Sending number of clients: " + torrents[id].Clients.Count);
-                    await mc.SendInt(torrents[id].Clients.Count);
+                    await mc.SendIntAsync(torrents[id].Clients.Count);
 
                     foreach (ConnectInfo cl in torrents[id].ClientsInfo)
                     {
                         Logger.WriteLine("Sending client IP: " + cl.IPToString());
                         await mc.SendBytesAsync(cl.IP);
                         Logger.WriteLine("Sending client port: " + cl.Port.ToString());
-                        await mc.SendInt(cl.Port);
+                        await mc.SendIntAsync(cl.Port);
                     }
                 }
                 else
@@ -104,7 +104,7 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
             {
                 Logger.WriteLine("Requested torrent is unavailable");
 
-                await mc.SendByte((byte)Client.eRequestPartResponse.NeverAvailable);
+                await mc.SendByteAsync((byte)Client.eRequestPartResponse.NeverAvailable);
 
 
                 mc.Close();
@@ -143,7 +143,7 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
         
         await cl.ConnectAsync(connectInfo);
 
-        await cl.SendInt(MyConnectInfo.Port);
+        await cl.SendIntAsync(MyConnectInfo.Port);
 
         await cl.SendIdAsync(torrent.Id);
 
@@ -154,16 +154,16 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
             return;
         }
         Logger.WriteLine("Requesting clients");
-        await cl.SendByte((byte)eConnectType.RequestClients);
+        await cl.SendByteAsync((byte)eConnectType.RequestClients);
         
-        int count = await cl.ReadInt();
+        int count = await cl.ReadIntAsync();
         Logger.WriteLine("Receiving info of additional clients. Number of clients:" + count);
         for (int i = 0; i < count; ++i)
         {
             Logger.WriteLine("Receiving IP");
-            byte[] ip = await cl.ReadBytes(4);
+            byte[] ip = await cl.ReadBytesAsync(4);
             Logger.WriteLine("Receiving Port");
-            int port = await cl.ReadInt();
+            int port = await cl.ReadIntAsync();
             ConnectInfo info = new ConnectInfo(ip, port);
 
             Logger.WriteLine("Trying to connect to client: " + info.IPToString() + " Port:" + port.ToString());
@@ -173,7 +173,7 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
                 Client c = new Client();
                 await c.ConnectAsync(info);
 
-                await c.SendInt(info.Port);
+                await c.SendIntAsync(info.Port);
 
                 await c.SendIdAsync(torrent.Id);
                 if ((Client.eRequestPartResponse)await c.ReadByteAsync() != Client.eRequestPartResponse.OK)
@@ -182,7 +182,7 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
                     continue;
                 }
 
-                await c.SendByte((byte)eConnectType.JustConnect);
+                await c.SendByteAsync((byte)eConnectType.JustConnect);
 
                 Logger.WriteLine("Successfully connected to client: " + c.ConnectInfo.IPToString() + " Port:" + port.ToString());
                 Clients.Add(c);
