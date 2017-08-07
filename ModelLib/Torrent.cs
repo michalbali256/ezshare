@@ -110,18 +110,18 @@ namespace EzShare
                         Clients[i].DownloadedBytes = 0;
                     }
 
-                    return downSum / (time / 1000);
+                    return downSum / (time / 1000d);
                 }
             }
             /// <summary>
             /// Actual speed of upload.
             /// </summary>
-            public virtual object UploadSpeed
+            public double UploadSpeed
             {
                 get
                 {
-                    long time = downloadStopWatch.ElapsedMilliseconds;
-                    downloadStopWatch.Restart();
+                    long time = uploadStopWatch.ElapsedMilliseconds;
+                    uploadStopWatch.Restart();
                     int upSum = 0;
                     for (int i = 0; i < Clients.Count; ++i)
                     {
@@ -129,7 +129,7 @@ namespace EzShare
                         Clients[i].UploadedBytes = 0;
                     }
 
-                    return upSum / (time / 1000);
+                    return upSum / (time / 1000d);
                 }
             }
 

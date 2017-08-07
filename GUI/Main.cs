@@ -54,14 +54,39 @@ namespace EzShare
                 r.Cells[1].Value = t.ProgressOfFile.ToString() + "/" + t.NumberOfParts; ;
                 r.Cells[2].Value = t.Status.ToString();
                 r.Cells[3].Value = normalizeSize(t.Size);
-                r.Cells[4].Value = t.DownloadSpeed;
-                r.Cells[5].Value = t.UploadSpeed;
+                r.Cells[4].Value = normalizeSpeed(t.DownloadSpeed);
+                r.Cells[5].Value = normalizeSpeed(t.UploadSpeed);
                 r.Cells[6].Value = t.Clients.Count;
             }
 
+            string[] units = {"B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB" };
+
             private string normalizeSize(long size)
             {
-                return size.ToString();
+                double siz = size;
+                int unit = 0;
+                while (siz > 1024)
+                {
+                    ++unit;
+                    siz = siz / 1024;
+                }
+
+                return Math.Round(siz, 1) + units[unit];
+            }
+
+            private string normalizeSpeed(double speed)
+            {
+                int unit = 0;
+                while (speed > 1024)
+                {
+                    ++unit;
+                    speed = speed / 1024;
+                }
+
+                if (speed == double.NaN)
+                    speed = 0;
+
+                return Math.Round(speed, 1) + units[unit] + "/s";
             }
 
             private void toolStripButtonAdd_Click(object sender, EventArgs e)
