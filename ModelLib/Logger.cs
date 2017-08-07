@@ -5,24 +5,33 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-public static class Logger
+namespace EzShare
 {
-    static StreamWriter sw = new StreamWriter("log.log");
-    static bool closed = false;
-    public static event Action<string> WroteLine;
-    public static void WriteLine(string line)
+    namespace ModelLib
     {
-        if (closed)
-            return;
-        WroteLine?.Invoke(line);
-        
-        sw.WriteLine(line);
-    }
+        /// <summary>
+        /// Provides Log for whole application.
+        /// </summary>
+        public static class Logger
+        {
+            static StreamWriter sw = new StreamWriter("log.log");
+            static bool closed = false;
+            public static event Action<string> WroteLine;
+            public static void WriteLine(string line)
+            {
+                if (closed)
+                    return;
+                WroteLine?.Invoke(line);
 
-    public static void Close()
-    {
-        sw.Close();
-        closed = true;
+                sw.WriteLine(line);
+            }
+
+            public static void Close()
+            {
+                sw.Close();
+                closed = true;
+            }
+        }
     }
 }
 
