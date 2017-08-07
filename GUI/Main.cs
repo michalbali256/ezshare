@@ -54,11 +54,9 @@ namespace EzShare
                 r.Cells[1].Value = t.ProgressOfFile.ToString() + "/" + t.NumberOfParts; ;
                 r.Cells[2].Value = t.Status.ToString();
                 r.Cells[3].Value = normalizeSize(t.Size);
-
-
+                r.Cells[4].Value = t.DownloadSpeed;
+                r.Cells[5].Value = t.UploadSpeed;
                 r.Cells[6].Value = t.Clients.Count;
-                if (t.Clients.Count > 0)
-                    r.Cells[7].Value = t.Clients[0].Available;
             }
 
             private string normalizeSize(long size)
@@ -109,7 +107,7 @@ namespace EzShare
                     addRow(t);
                 }
 
-                manager.StartListening();
+                manager.StartListeningAsync();
 
                 timerUpdate.Enabled = true;
 

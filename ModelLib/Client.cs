@@ -28,7 +28,14 @@ namespace EzShare
             /// </summary>
             public int Available { get { return client.Available; } }
 
-
+            /// <summary>
+            /// Counter of bytes that were downloaded.
+            /// </summary>
+            public int DownloadedBytes { get; set; }
+            /// <summary>
+            /// Counter of bytes that were uploaded.
+            /// </summary>
+            public int UploadedBytes { get; set; }
 
             /// <summary>
             /// Represents types of requests that can be sent
@@ -53,6 +60,7 @@ namespace EzShare
                 {
                     int now = await stream.ReadAsync(bytes, rd, count - rd);
                     rd += now;
+                    DownloadedBytes += now;
                     if (now == 0)//if 0 bytes were read, it means connection is bad
                         throw new InvalidOperationException("Connection ended.");
                 }
@@ -142,6 +150,7 @@ namespace EzShare
             public async Task SendBytesAsync(byte[] buffer)
             {
                 await stream.WriteAsync(buffer, 0, buffer.Length);
+                UploadedBytes += buffer.Length;
             }
 
 

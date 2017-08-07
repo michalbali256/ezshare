@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.IO;
 using System.Xml;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace EzShare
 {
@@ -21,6 +22,8 @@ namespace EzShare
             /// </summary>
             private Torrent()
             {
+                downloadStopWatch.Start();
+                uploadStopWatch.Start();
                 Clients = new List<Client>();
                 id = "";
                 Random r = new Random();
@@ -88,19 +91,46 @@ namespace EzShare
             /// </summary>
             public virtual eStatus Status { get; set; }
 
+            Stopwatch downloadStopWatch = new Stopwatch();
+            Stopwatch uploadStopWatch = new Stopwatch();
+
             /// <summary>
             /// Actual speed of download
             /// </summary>
-            public virtual object DownloadSpeed
+            public double DownloadSpeed
             {
-                get;
+                get
+                {
+                    long time = downloadStopWatch.ElapsedMilliseconds;
+                    downloadStopWatch.Restart();
+                    int downSum = 0;
+                    for (int i = 0; i < Clients.Count; ++i)
+                    {
+                        downSum += Clients[i].DownloadedBytes;
+                        Clients[i].DownloadedBytes = 0;
+                    }
+
+                    return downSum / (time / 1000);
+                }
             }
             /// <summary>
             /// Actual speed of upload.
             /// </summary>
             public virtual object UploadSpeed
             {
-                get;
+                get
+                {
+                    long time = downloadStopWatch.ElapsedMilliseconds;
+                    downloadStopWatch.Restart();
+                    int upSum = 0;
+                    for (int i = 0; i < Clients.Count; ++i)
+                    {
+                        upSum += Clients[i].UploadedBytes;
+                        Clients[i].UploadedBytes = 0;
+                    }
+
+                    return upSum / (time / 1000);
+                }
             }
 
             private readonly string id;
