@@ -50,6 +50,7 @@
             this.listBoxLog = new System.Windows.Forms.ListBox();
             this.saveFileDialogFile = new System.Windows.Forms.SaveFileDialog();
             this.timerUpdate = new System.Windows.Forms.Timer(this.components);
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.columnTorrent = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnProgress = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnState = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -58,18 +59,20 @@
             this.columnUpload = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnConnectedClients = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columntAvailableClients = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnBlank = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.contextMenuStripRow.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
             // 
             // dataGridView
             // 
             this.dataGridView.AllowUserToDeleteRows = false;
             this.dataGridView.AllowUserToResizeRows = false;
-            this.dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
             this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
@@ -80,14 +83,16 @@
             this.columnDownload,
             this.columnUpload,
             this.columnConnectedClients,
-            this.columntAvailableClients});
-            this.dataGridView.Location = new System.Drawing.Point(12, 68);
+            this.columntAvailableClients,
+            this.columnBlank});
+            this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView.Location = new System.Drawing.Point(0, 0);
             this.dataGridView.Name = "dataGridView";
             this.dataGridView.ReadOnly = true;
             this.dataGridView.RowHeadersVisible = false;
             this.dataGridView.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView.Size = new System.Drawing.Size(884, 149);
+            this.dataGridView.Size = new System.Drawing.Size(908, 261);
             this.dataGridView.TabIndex = 0;
             this.dataGridView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dataGridView_MouseDown);
             // 
@@ -228,15 +233,34 @@
             // 
             // listBoxLog
             // 
+            this.listBoxLog.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listBoxLog.FormattingEnabled = true;
-            this.listBoxLog.Location = new System.Drawing.Point(12, 223);
+            this.listBoxLog.Location = new System.Drawing.Point(0, 0);
             this.listBoxLog.Name = "listBoxLog";
-            this.listBoxLog.Size = new System.Drawing.Size(757, 238);
+            this.listBoxLog.Size = new System.Drawing.Size(908, 155);
             this.listBoxLog.TabIndex = 5;
             // 
             // timerUpdate
             // 
             this.timerUpdate.Tick += new System.EventHandler(this.timerUpdate_Tick);
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 49);
+            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.dataGridView);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.listBoxLog);
+            this.splitContainer1.Size = new System.Drawing.Size(908, 420);
+            this.splitContainer1.SplitterDistance = 261;
+            this.splitContainer1.TabIndex = 6;
             // 
             // columnTorrent
             // 
@@ -244,7 +268,7 @@
             this.columnTorrent.HeaderText = "Torrent";
             this.columnTorrent.Name = "columnTorrent";
             this.columnTorrent.ReadOnly = true;
-            this.columnTorrent.Width = 141;
+            this.columnTorrent.Width = 250;
             // 
             // columnProgress
             // 
@@ -288,16 +312,22 @@
             this.columntAvailableClients.Name = "columntAvailableClients";
             this.columntAvailableClients.ReadOnly = true;
             // 
+            // columnBlank
+            // 
+            this.columnBlank.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.columnBlank.HeaderText = "";
+            this.columnBlank.Name = "columnBlank";
+            this.columnBlank.ReadOnly = true;
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(908, 491);
-            this.Controls.Add(this.listBoxLog);
+            this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip);
-            this.Controls.Add(this.dataGridView);
             this.MainMenuStrip = this.menuStrip;
             this.Name = "Main";
             this.Text = "EasyShare";
@@ -307,6 +337,10 @@
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.contextMenuStripRow.ResumeLayout(false);
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -335,6 +369,7 @@
         private System.Windows.Forms.ListBox listBoxLog;
         private System.Windows.Forms.SaveFileDialog saveFileDialogFile;
         private System.Windows.Forms.Timer timerUpdate;
+        private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnTorrent;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnProgress;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnState;
@@ -343,6 +378,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn columnUpload;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnConnectedClients;
         private System.Windows.Forms.DataGridViewTextBoxColumn columntAvailableClients;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnBlank;
     }
 }
 

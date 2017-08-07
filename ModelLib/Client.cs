@@ -5,6 +5,9 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+/// <summary>
+/// Provides wrapper over TcpClient, abstract class for UpClient and DownClient
+/// </summary>
 public abstract class Client
 {
     protected TcpClient client;
