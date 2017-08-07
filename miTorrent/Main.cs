@@ -15,26 +15,6 @@ namespace miTorrent
             InitializeComponent();
             Logger.WroteLine += Logger_WriteLineE;
             Logger.WriteLine("Loading settings.xml");
-            XmlDocument doc = new XmlDocument();
-            try
-            {
-                doc.Load(settingsFile);
-                manager = TorrentManager.FromXml(doc[xmlName][TorrentManager.XmlName]);
-                Logger.WriteLine("Loaded settings.xml");
-            }
-            catch (System.IO.IOException)
-            {
-                Logger.WriteLine("Loading settings.xml failed, using default settings");
-                manager = new TorrentManager();
-            }
-
-            dataGridView.Rows.Clear();
-            foreach (var t in manager)
-            {
-                addRow(t);
-            }
-
-            manager.StartListening();
         }
 
         private void Logger_WriteLineE(string obj)
@@ -72,7 +52,7 @@ namespace miTorrent
 
 
             r.Cells[6].Value = t.Clients.Count;
-            if(t.Clients.Count > 0)
+            if (t.Clients.Count > 0)
                 r.Cells[7].Value = t.Clients[0].Available;
         }
 
@@ -104,10 +84,46 @@ namespace miTorrent
 
         private async void Main_Load(object sender, EventArgs e)
         {
+            XmlDocument doc = new XmlDocument();
+            try
+            {
+                doc.Load(settingsFile);
+                manager = TorrentManager.FromXml(doc[xmlName][TorrentManager.XmlName]);
+                Logger.WriteLine("Loaded settings.xml");
+            }
+            catch (System.IO.IOException)
+            {
+                Logger.WriteLine("Loading settings.xml failed, using default settings");
+                manager = new TorrentManager(getLocalIPAddress());
+                
+            }
+
+            dataGridView.Rows.Clear();
+            foreach (var t in manager)
+            {
+                addRow(t);
+            }
+
+            manager.StartListening();
+
             timerUpdate.Enabled = true;
+
+
 
             await manager.ConnectAllDownloadingTorrentsAsync();
         }
+
+        private byte[] getLocalIPAddress()
+        {
+            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
+            {
+                socket.Connect("8.8.8.8", 65530);
+                IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
+                return endPoint.Address.GetAddressBytes();
+            }
+            throw new IPNotFoundException("Local IP Address Not Found!");
+        }
+
 
         private void propertiesToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -128,7 +144,7 @@ namespace miTorrent
             {
                 var hti = dataGridView.HitTest(e.X, e.Y);
                 dataGridView.ClearSelection();
-                if(hti.RowIndex >= 0 && hti.RowIndex < dataGridView.Rows.Count)
+                if (hti.RowIndex >= 0 && hti.RowIndex < dataGridView.Rows.Count)
                     dataGridView.Rows[hti.RowIndex].Selected = true;
             }
         }
@@ -160,7 +176,7 @@ namespace miTorrent
 
         private async void toolStripButtonConnect_Click(object sender, EventArgs e)
         {
-            
+
             if (openFileDialogTorrent.ShowDialog() != DialogResult.OK)
                 return;
             XmlDocument doc = new XmlDocument();
@@ -173,11 +189,11 @@ namespace miTorrent
                 doc.Load(openFileDialogTorrent.FileName);
                 XmlElement headerElement = doc["share"][ConnectInfo.XmlName];
                 XmlElement torrentElement = doc["share"][Torrent.XmlName];
-                
+
                 torrent = Torrent.CreateFromXmlShare(torrentElement, saveFileDialogFile.FileName);
                 connectInfo = ConnectInfo.ParseXml(headerElement);
 
-                
+
                 addRow(torrent);
                 manager.Add(torrent);
                 try
@@ -205,14 +221,14 @@ namespace miTorrent
             {
                 Logger.WriteLine("Couldn't open file. " + ex.ToString());
                 MessageBox.Show("Couldn't open file. " + ex.ToString());
-                
+
             }
             catch (XmlException ex)
             {
                 Logger.WriteLine("File has wrong format. " + ex.ToString());
                 MessageBox.Show("File has wrong format. " + ex.ToString());
             }
-            
+
         }
 
         private void toolStripButtonRemove_Click(object sender, EventArgs e)
@@ -238,4 +254,13 @@ namespace miTorrent
             }
         }
     }
+
+    class IPNotFoundException : Exception
+    {
+        public IPNotFoundException(string s) : base(s)
+        {
+
+        }
+    }
+
 }

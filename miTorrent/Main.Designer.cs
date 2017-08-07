@@ -30,6 +30,15 @@
         {
             this.components = new System.ComponentModel.Container();
             this.dataGridView = new System.Windows.Forms.DataGridView();
+            this.columnTorrent = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnProgress = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnState = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnSize = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnDownload = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnUpload = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnConnectedClients = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columntAvailableClients = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnBlank = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonConnect = new System.Windows.Forms.ToolStripButton();
@@ -38,7 +47,6 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonStart = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonPause = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
             this.timerRefreshTable = new System.Windows.Forms.Timer(this.components);
             this.openFileDialogTorrent = new System.Windows.Forms.OpenFileDialog();
             this.contextMenuStripRow = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -51,15 +59,6 @@
             this.saveFileDialogFile = new System.Windows.Forms.SaveFileDialog();
             this.timerUpdate = new System.Windows.Forms.Timer(this.components);
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.columnTorrent = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnProgress = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnState = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnSize = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnDownload = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnUpload = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnConnectedClients = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columntAvailableClients = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnBlank = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.contextMenuStripRow.SuspendLayout();
@@ -90,11 +89,68 @@
             this.dataGridView.Name = "dataGridView";
             this.dataGridView.ReadOnly = true;
             this.dataGridView.RowHeadersVisible = false;
-            this.dataGridView.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridView.Size = new System.Drawing.Size(908, 261);
             this.dataGridView.TabIndex = 0;
             this.dataGridView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dataGridView_MouseDown);
+            // 
+            // columnTorrent
+            // 
+            this.columnTorrent.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.columnTorrent.HeaderText = "Torrent";
+            this.columnTorrent.Name = "columnTorrent";
+            this.columnTorrent.ReadOnly = true;
+            this.columnTorrent.Width = 250;
+            // 
+            // columnProgress
+            // 
+            this.columnProgress.HeaderText = "Progress";
+            this.columnProgress.Name = "columnProgress";
+            this.columnProgress.ReadOnly = true;
+            // 
+            // columnState
+            // 
+            this.columnState.HeaderText = "State";
+            this.columnState.Name = "columnState";
+            this.columnState.ReadOnly = true;
+            // 
+            // columnSize
+            // 
+            this.columnSize.HeaderText = "Size";
+            this.columnSize.Name = "columnSize";
+            this.columnSize.ReadOnly = true;
+            // 
+            // columnDownload
+            // 
+            this.columnDownload.HeaderText = "Download";
+            this.columnDownload.Name = "columnDownload";
+            this.columnDownload.ReadOnly = true;
+            // 
+            // columnUpload
+            // 
+            this.columnUpload.HeaderText = "Upload";
+            this.columnUpload.Name = "columnUpload";
+            this.columnUpload.ReadOnly = true;
+            // 
+            // columnConnectedClients
+            // 
+            this.columnConnectedClients.HeaderText = "ConnectedClients";
+            this.columnConnectedClients.Name = "columnConnectedClients";
+            this.columnConnectedClients.ReadOnly = true;
+            // 
+            // columntAvailableClients
+            // 
+            this.columntAvailableClients.HeaderText = "Available";
+            this.columntAvailableClients.Name = "columntAvailableClients";
+            this.columntAvailableClients.ReadOnly = true;
+            // 
+            // columnBlank
+            // 
+            this.columnBlank.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.columnBlank.HeaderText = "";
+            this.columnBlank.MinimumWidth = 2;
+            this.columnBlank.Name = "columnBlank";
+            this.columnBlank.ReadOnly = true;
             // 
             // statusStrip1
             // 
@@ -112,8 +168,7 @@
             this.toolStripButtonRemove,
             this.toolStripSeparator1,
             this.toolStripButtonStart,
-            this.toolStripButtonPause,
-            this.toolStripButton3});
+            this.toolStripButtonPause});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(908, 25);
@@ -174,15 +229,6 @@
             this.toolStripButtonPause.Size = new System.Drawing.Size(23, 22);
             this.toolStripButtonPause.Text = "Pause";
             this.toolStripButtonPause.Click += new System.EventHandler(this.toolStripButtonPause_Click);
-            // 
-            // toolStripButton3
-            // 
-            this.toolStripButton3.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton3.Image = global::miTorrent.Properties.Resources.Stop;
-            this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton3.Name = "toolStripButton3";
-            this.toolStripButton3.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton3.Text = "Stop";
             // 
             // timerRefreshTable
             // 
@@ -262,63 +308,6 @@
             this.splitContainer1.SplitterDistance = 261;
             this.splitContainer1.TabIndex = 6;
             // 
-            // columnTorrent
-            // 
-            this.columnTorrent.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.columnTorrent.HeaderText = "Torrent";
-            this.columnTorrent.Name = "columnTorrent";
-            this.columnTorrent.ReadOnly = true;
-            this.columnTorrent.Width = 250;
-            // 
-            // columnProgress
-            // 
-            this.columnProgress.HeaderText = "Progress";
-            this.columnProgress.Name = "columnProgress";
-            this.columnProgress.ReadOnly = true;
-            // 
-            // columnState
-            // 
-            this.columnState.HeaderText = "State";
-            this.columnState.Name = "columnState";
-            this.columnState.ReadOnly = true;
-            // 
-            // columnSize
-            // 
-            this.columnSize.HeaderText = "Size";
-            this.columnSize.Name = "columnSize";
-            this.columnSize.ReadOnly = true;
-            // 
-            // columnDownload
-            // 
-            this.columnDownload.HeaderText = "Download";
-            this.columnDownload.Name = "columnDownload";
-            this.columnDownload.ReadOnly = true;
-            // 
-            // columnUpload
-            // 
-            this.columnUpload.HeaderText = "Upload";
-            this.columnUpload.Name = "columnUpload";
-            this.columnUpload.ReadOnly = true;
-            // 
-            // columnConnectedClients
-            // 
-            this.columnConnectedClients.HeaderText = "ConnectedClients";
-            this.columnConnectedClients.Name = "columnConnectedClients";
-            this.columnConnectedClients.ReadOnly = true;
-            // 
-            // columntAvailableClients
-            // 
-            this.columntAvailableClients.HeaderText = "Available";
-            this.columntAvailableClients.Name = "columntAvailableClients";
-            this.columntAvailableClients.ReadOnly = true;
-            // 
-            // columnBlank
-            // 
-            this.columnBlank.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.columnBlank.HeaderText = "";
-            this.columnBlank.Name = "columnBlank";
-            this.columnBlank.ReadOnly = true;
-            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -353,7 +342,6 @@
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton toolStripButtonStart;
         private System.Windows.Forms.ToolStripButton toolStripButtonPause;
-        private System.Windows.Forms.ToolStripButton toolStripButton3;
         private System.Windows.Forms.ToolStripButton toolStripButtonAdd;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton toolStripButtonRemove;

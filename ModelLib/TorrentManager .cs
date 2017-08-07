@@ -20,6 +20,14 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
         set { torrents[i] = value; }
     }
 
+    public TorrentManager()
+    { }
+
+    public TorrentManager(byte[] ipAdress)
+    {
+        MyConnectInfo = new ConnectInfo(ipAdress, 10421);
+    }
+
     public static TorrentManager FromXml(XmlElement xmlElement)
     {
         TorrentManager tm = new TorrentManager();
