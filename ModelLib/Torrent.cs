@@ -35,10 +35,22 @@ public class Torrent : IDisposable
         Error
     }
 
-    internal void AddClient(Client mc)
+    public void AddClient(Client client)
     {
-        Clients.Add(mc);
-        mc.ListenAsync(this);
+        client.ClientClosed += mc_ClientClosed;
+        Clients.Add(client);
+    }
+
+    public void RemoveClient(Client client)
+    {
+        client.ClientClosed -= mc_ClientClosed;
+        Clients.Remove(client);
+    }
+
+    private void mc_ClientClosed(Client sender)
+    {
+        Clients.Remove(sender);
+        sender.ClientClosed -= mc_ClientClosed;
     }
 
     public HashSet<ConnectInfo> ClientsInfo { get; set; } = new HashSet<ConnectInfo>();
@@ -83,11 +95,26 @@ public class Torrent : IDisposable
 		get { return File == null ? 0 : File.Progress; }
 	}
 
-	public virtual List<Client> Clients
+	public List<Client> Clients
 	{
 		get;
 		set;
 	}
+    public IEnumerable<DownClient> DownClients
+    {
+        get
+        {
+            return Clients.OfType<DownClient>();
+        }
+    }
+
+    public IEnumerable<UpClient> UpClients
+    {
+        get
+        {
+            return Clients.OfType<UpClient>();
+        }
+    }
 
     public PartFile File;
     public long Size
@@ -110,6 +137,10 @@ public class Torrent : IDisposable
         if(Status != eStatus.Error)
             e.AppendChild(File.SaveToXml(doc));
 
+        XmlElement clients = doc.CreateElement("clients");
+        foreach (ConnectInfo info in this.ClientsInfo)
+            clients.AppendChild(info.SaveToXml(doc));
+        e.AppendChild(clients);
         return e;
     }
 
@@ -124,16 +155,18 @@ public class Torrent : IDisposable
         return e;
     }
 
+    
 
     bool downloadIsRunning = false;
-    internal async Task Download()
+    public async Task Download()
     {
+        
         downloadIsRunning = true;
         Status = Torrent.eStatus.Downloading;
         Logger.WriteLine("Starting download:" + Name);
         long part;
-        var tasks = new Dictionary<Task<Client.eRequestPartResponse>, Tuple<Client, long>>();
-        foreach (var c in Clients)
+        var tasks = new Dictionary<Task<Client.eRequestPartResponse>, Tuple<DownClient, long>>();
+        foreach (var c in DownClients)
         {
             part = File.GetPartIndex(PartFile.ePartStatus.Missing);
             File.PartStatus[part] = PartFile.ePartStatus.Processing;
@@ -146,7 +179,7 @@ public class Torrent : IDisposable
         {
             var t = await Task.WhenAny(tasks.Keys);
 
-            Client clientEnded = tasks[t].Item1;
+            DownClient clientEnded = tasks[t].Item1;
             long partEnded = tasks[t].Item2;
 
             if (t.Result == Client.eRequestPartResponse.OK)
@@ -159,15 +192,16 @@ public class Torrent : IDisposable
             tasks.Remove(t);
 
             part = File.GetPartIndex(PartFile.ePartStatus.Missing);
-            if (part != -1 && Status == eStatus.Downloading)
+            if (part != -1 && Status == eStatus.Downloading && Clients.Contains(clientEnded))
             {
                 File.PartStatus[part] = PartFile.ePartStatus.Processing;
                 tasks.Add(clientEnded.DownloadPart(File, part), Tuple.Create(clientEnded, part));
             }
+            
         }
         if(Status == eStatus.Downloading && ProgressOfFile == NumberOfParts)
             Status = Torrent.eStatus.Seeding;
-
+        Logger.WriteLine("Ending download." + Name);
         downloadIsRunning = false;
     }
 
@@ -235,6 +269,11 @@ public class Torrent : IDisposable
             {
                 t.Status = eStatus.Error;
             }
+        foreach (XmlElement e in elem["clients"])
+        {
+            t.ClientsInfo.Add(ConnectInfo.ParseXml(e));
+        }
+
         return t;
     }
 

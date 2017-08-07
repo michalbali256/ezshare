@@ -7,13 +7,22 @@ using System.IO;
 
 public static class Logger
 {
-    public static StreamWriter sw = new StreamWriter("log.log");
-
-    public static event Action<string> OnWriteLine;
+    static StreamWriter sw = new StreamWriter("log.log");
+    static bool closed = false;
+    public static event Action<string> WroteLine;
     public static void WriteLine(string line)
     {
-        OnWriteLine?.Invoke(line);
+        if (closed)
+            return;
+        WroteLine?.Invoke(line);
+        
         sw.WriteLine(line);
+    }
+
+    public static void Close()
+    {
+        sw.Close();
+        closed = true;
     }
 }
 

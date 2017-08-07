@@ -13,7 +13,7 @@ namespace miTorrent
         public Main()
         {
             InitializeComponent();
-            Logger.OnWriteLine += Logger_WriteLineE;
+            Logger.WroteLine += Logger_WriteLineE;
             Logger.WriteLine("Loading settings.xml");
             XmlDocument doc = new XmlDocument();
             try
@@ -69,6 +69,11 @@ namespace miTorrent
             r.Cells[1].Value = t.ProgressOfFile.ToString() + "/" + t.NumberOfParts; ;
             r.Cells[2].Value = t.Status.ToString();
             r.Cells[3].Value = normalizeSize(t.Size);
+
+
+            r.Cells[6].Value = t.Clients.Count;
+            if(t.Clients.Count > 0)
+                r.Cells[7].Value = t.Clients[0].Available;
         }
 
         private string normalizeSize(long size)
@@ -94,12 +99,14 @@ namespace miTorrent
             settings.AppendChild(manager.SaveToXml(doc));
             doc.AppendChild(settings);
             doc.Save(settingsFile);
-            Logger.sw.Close();
+            Logger.Close();
         }
 
-        private void Main_Load(object sender, EventArgs e)
+        private async void Main_Load(object sender, EventArgs e)
         {
             timerUpdate.Enabled = true;
+
+            await manager.ConnectAllDownloadingTorrentsAsync();
         }
 
         private void propertiesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -135,7 +142,7 @@ namespace miTorrent
 
             XmlDocument doc = new XmlDocument();
             XmlElement documentElement = doc.CreateElement("share");
-            documentElement.AppendChild(manager.MyConnectInfo.ShareHeaderToXml(doc));
+            documentElement.AppendChild(manager.MyConnectInfo.SaveToXml(doc));
             documentElement.AppendChild(t.SaveToXmlShare(doc));
 
             doc.AppendChild(documentElement);
@@ -153,6 +160,7 @@ namespace miTorrent
 
         private async void toolStripButtonConnect_Click(object sender, EventArgs e)
         {
+            
             if (openFileDialogTorrent.ShowDialog() != DialogResult.OK)
                 return;
             XmlDocument doc = new XmlDocument();
@@ -171,11 +179,11 @@ namespace miTorrent
 
                 
                 addRow(torrent);
-
+                manager.Add(torrent);
                 try
                 {
                     await manager.ConnectTorrentAsync(torrent, connectInfo);
-
+                    await torrent.Download();
                 }
                 catch (SocketException)
                 {

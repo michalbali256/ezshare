@@ -79,8 +79,9 @@ public class PartFile : IDisposable
         NumberOfParts = (Size - 1) / PartSize + 1;
         PartStatus = new ePartStatus[NumberOfParts];
 
-        
-        Hash = hashFromStream(stream);
+
+        //Hash = hashFromStream(stream);
+        Hash = "THISISJUSTLONGENOUGHSTRING00000000000";
     }
 
     public void Seek(long part)
@@ -120,8 +121,9 @@ public class PartFile : IDisposable
 
         StringBuilder sb = new StringBuilder();
 
+        //Writes status of every part into the file as number (0 or 2). Processing parts are saved as missing.
         for (int i = 0; i < NumberOfParts; ++i)
-            sb.Append((int)PartStatus[i]);
+            sb.Append((int)(PartStatus[i] == ePartStatus.Processing ? ePartStatus.Missing : PartStatus[i]));
 
         elem.AppendElementWithValue("partstatus", sb.ToString());
 
@@ -141,8 +143,8 @@ public class PartFile : IDisposable
     {
         PartFile file = new PartFile(elem["filepath"].InnerText);
 
-        if (checkHash && file.Hash != elem["hash"].InnerText)
-            throw new WrongFileException("File has changed");
+        /*if (checkHash && file.Hash != elem["hash"].InnerText)
+            throw new WrongFileException("File has changed");*/
 
         file.FileName = elem["filename"].InnerText;
         file.NumberOfParts = long.Parse(elem["numberofparts"].InnerText);
@@ -207,7 +209,7 @@ public class PartFile : IDisposable
         file.Hash = elem["hash"].InnerText;
         file.Size = long.Parse(elem["size"].InnerText);
 
-        file.setLength(file.Size);
+        //file.setLength(file.Size);
 
         return file;
     }

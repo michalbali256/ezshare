@@ -18,7 +18,7 @@ public struct ConnectInfo
 
     public static string XmlName = "connectinfo";
 
-    public XmlElement ShareHeaderToXml(XmlDocument doc)
+    public XmlElement SaveToXml(XmlDocument doc)
     {
         XmlElement el = doc.CreateElement(XmlName);
         XmlElement ip = doc.CreateElement("ip");
@@ -48,5 +48,22 @@ public struct ConnectInfo
     {
         return $"{IP[0]}.{IP[1]}.{IP[2]}.{IP[3]}";
     }
+
+    public static bool Equals(ConnectInfo x, ConnectInfo y)
+    {
+        return x.Port == y.Port && x.IP.SequenceEqual(y.IP);
+    }
+
+
 }
 
+public static class Extend
+{
+    public static bool ContainsValue(this HashSet<ConnectInfo> set, ConnectInfo info)
+    {
+        foreach (ConnectInfo i in set)
+            if (ConnectInfo.Equals(i, info))
+                return true;
+        return false;
+    }
+}

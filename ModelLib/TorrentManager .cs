@@ -28,8 +28,7 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
             Torrent t = Torrent.CreateFromXml(e);
             tm.Add(t); //later automatic start
         }
-        if (xmlElement.GetElementsByTagName(ConnectInfo.XmlName).Count == 1)
-            tm.MyConnectInfo = ConnectInfo.ParseXml(xmlElement[ConnectInfo.XmlName]);
+        tm.MyConnectInfo = ConnectInfo.ParseXml(xmlElement[ConnectInfo.XmlName]);
         return tm;
     }
 
@@ -44,7 +43,7 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
         }
         elem.AppendChild(torrentsElem);
 
-        elem.AppendChild(MyConnectInfo.ShareHeaderToXml(doc));
+        elem.AppendChild(MyConnectInfo.SaveToXml(doc));
         return elem;
     }
 
@@ -63,7 +62,7 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
         for(;;)
         {
             c = await lis.AcceptTcpClientAsync();
-            Client mc = new Client(c);
+            UpClient mc = new UpClient(c);
             Logger.WriteLine("Client connected. IP: " + ((IPEndPoint)c.Client.RemoteEndPoint).Address.ToString());
 
             
@@ -81,8 +80,8 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
 
                 if (await mc.ReadByteAsync() == (byte)eConnectType.RequestClients)
                 {
-                    Logger.WriteLine("Sending number of clients: " + torrents[id].Clients.Count);
-                    await mc.SendIntAsync(torrents[id].Clients.Count);
+                    Logger.WriteLine("Sending number of clients: " + torrents[id].ClientsInfo.Count);
+                    await mc.SendIntAsync(torrents[id].ClientsInfo.Count);
 
                     foreach (ConnectInfo cl in torrents[id].ClientsInfo)
                     {
@@ -97,8 +96,12 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
                     Logger.WriteLine("Clients not requested");
                 }
                 torrents[id].AddClient(mc);
-                Clients.Add(mc);
-                torrents[id].ClientsInfo.Add(new ConnectInfo(((IPEndPoint)c.Client.RemoteEndPoint).Address.GetAddressBytes(), remoteListeningPort));
+                mc.ListenAsync(torrents[id]);
+                ConnectInfo newInfo = new ConnectInfo(((IPEndPoint)c.Client.RemoteEndPoint).Address.GetAddressBytes(), remoteListeningPort);
+                if (!torrents[id].ClientsInfo.ContainsValue(newInfo))
+                {
+                    torrents[id].ClientsInfo.Add(newInfo);
+                }
             }
             else
             {
@@ -113,11 +116,34 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
         }
     }
 
-    public virtual HashSet<Client> Clients
+    public async Task ConnectAllDownloadingTorrentsAsync()
+    {
+        foreach (Torrent torrent in this)
+        {
+            if (torrent.Status == Torrent.eStatus.Downloading)
+            {
+                foreach (ConnectInfo info in torrent.ClientsInfo.ToArray())
+                {
+                    try
+                    {
+                        await ConnectTorrentAsync(torrent, info);
+
+                    }
+                    catch (SocketException)
+                    {
+                        Logger.WriteLine("Unable to connect to client: " + info.IPToString() + " port: " + info.Port);
+                    }
+                }
+                torrent.Download();
+            }
+        }
+    }
+
+    /*public virtual HashSet<Client> Clients
     {
         get;
         set;
-    } = new HashSet<Client>();
+    } = new HashSet<Client>();*/
 
 
 	public virtual void Add(Torrent t)
@@ -139,7 +165,15 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
 
     public async Task ConnectTorrentAsync(Torrent torrent, ConnectInfo connectInfo)
     {
-        Client cl = new Client();
+        if (ConnectInfo.Equals(connectInfo, MyConnectInfo))
+        {
+            return;
+        }
+
+        if (!torrent.ClientsInfo.ContainsValue(connectInfo))
+            torrent.ClientsInfo.Add(connectInfo);
+
+        DownClient cl = new DownClient();
         
         await cl.ConnectAsync(connectInfo);
 
@@ -150,7 +184,9 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
         if ((Client.eRequestPartResponse)await cl.ReadByteAsync() != Client.eRequestPartResponse.OK)
         {
             Logger.WriteLine("Torrent not available on host: " + connectInfo.IPToString() + " port: " + connectInfo.Port.ToString());
-            torrent.Status = Torrent.eStatus.Error;
+            Logger.WriteLine("Unable to connect to any clients");
+            if(!torrent.ClientsInfo.ContainsValue(connectInfo))
+                torrent.ClientsInfo.Add(connectInfo);
             return;
         }
         Logger.WriteLine("Requesting clients");
@@ -166,11 +202,21 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
             int port = await cl.ReadIntAsync();
             ConnectInfo info = new ConnectInfo(ip, port);
 
+            if (torrent.ClientsInfo.ContainsValue(info))
+            {
+                Logger.WriteLine("Client already in clients list");
+                continue;
+            }
+            if (ConnectInfo.Equals(info, MyConnectInfo))
+            {
+                Logger.WriteLine("Recieved info about this client.");
+                continue;
+            }
             Logger.WriteLine("Trying to connect to client: " + info.IPToString() + " Port:" + port.ToString());
 
             try
             {
-                Client c = new Client();
+                DownClient c = new DownClient();
                 await c.ConnectAsync(info);
 
                 await c.SendIntAsync(info.Port);
@@ -185,21 +231,17 @@ public class TorrentManager : IEnumerable<Torrent>, IDisposable
                 await c.SendByteAsync((byte)eConnectType.JustConnect);
 
                 Logger.WriteLine("Successfully connected to client: " + c.ConnectInfo.IPToString() + " Port:" + port.ToString());
-                Clients.Add(c);
-                torrent.Clients.Add(c);
-                torrent.ClientsInfo.Add(info);
+
+                torrent.AddClient(c);
+                torrent.ClientsInfo.Add(info);  
             }
-            catch (SocketException)
-            { }
+            catch (SocketException ex)
+            {
+                Logger.WriteLine(ex.Message);
+            }
         }
 
-
-        Add(torrent);
-
-        Clients.Add(cl);
-        torrent.Clients.Add(cl);
-        torrent.ClientsInfo.Add(connectInfo);
-        await torrent.Download();
+        torrent.AddClient(cl);
     }
 
     public IEnumerator<Torrent> GetEnumerator()
