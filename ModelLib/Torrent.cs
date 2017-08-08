@@ -318,7 +318,8 @@ namespace EzShare
             /// </summary>
             public void Pause()
             {
-                Status = eStatus.Paused;
+                if(Status != eStatus.Error)
+                    Status = eStatus.Paused;
             }
 
             /// <summary>
