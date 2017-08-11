@@ -106,7 +106,7 @@ namespace EzShare
                 }
             }
             Random rnd = new Random();
-            SemaphoreSlim sem = new SemaphoreSlim(1, 1);
+            SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
 
             /// <summary>
             /// Opens file and initializes separation into parts.
@@ -245,7 +245,7 @@ namespace EzShare
             /// <returns></returns>
             internal async Task WritePartAsync(byte[] buffer, long part)
             {
-                await sem.WaitAsync();
+                await writeSemaphore.WaitAsync();
 
                 try
                 {
@@ -258,7 +258,7 @@ namespace EzShare
                 }
                 finally
                 {
-                    sem.Release();
+                    writeSemaphore.Release();
                 }
             }
 
@@ -327,6 +327,7 @@ namespace EzShare
 
             public void Dispose()
             {
+                writeSemaphore.Dispose();
                 stream.Dispose();
             }
 

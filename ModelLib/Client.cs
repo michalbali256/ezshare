@@ -163,10 +163,11 @@ namespace EzShare
                 OnClientClosed();
             }
 
+            public delegate void ClientClosedEventHandler(Client sender);
             /// <summary>
             /// Event that is invoked when Client was closed
             /// </summary>
-            public event Action<Client> ClientClosed;
+            public event ClientClosedEventHandler ClientClosed;
             /// <summary>
             /// Invokes ClientClosed event
             /// </summary>

@@ -187,7 +187,6 @@
             this.propertiesToolStripMenuItem});
             this.contextMenuStripRow.Name = "contextMenuStripRow";
             this.contextMenuStripRow.Size = new System.Drawing.Size(152, 48);
-            this.contextMenuStripRow.Opened += new System.EventHandler(this.contextMenuStripRow_Opened);
             // 
             // saveshareFileToolStripMenuItem
             // 

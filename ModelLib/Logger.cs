@@ -32,6 +32,8 @@ namespace EzShare
                 closed = true;
             }
         }
+
+       
     }
 }
 

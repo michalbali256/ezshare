@@ -16,9 +16,15 @@ namespace EzShare
     {
         public partial class TorrentProperties : Form
         {
+            /// <summary>
+            /// Creates new form that edits specified torrent
+            /// </summary>
+            /// <param name="t"></param>
+            /// <param name="creatingNew"></param>
             public TorrentProperties(Torrent t, bool creatingNew)
             {
                 InitializeComponent();
+
                 editing = t;
                 textBoxFileName.Text = t.FilePath;
 
@@ -30,8 +36,16 @@ namespace EzShare
             }
 
             bool OK = false;
+            /// <summary>
+            /// Torrent that is being edited
+            /// </summary>
             Torrent editing;
 
+            /// <summary>
+            /// Opens file dialog and edits text box.
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void buttonBrowse_Click(object sender, EventArgs e)
             {
                 openFileDialogFile.FileName = textBoxFileName.Text;
@@ -41,17 +55,32 @@ namespace EzShare
 
             }
 
+            /// <summary>
+            /// Closes form and sets OK flag
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void buttonOK_Click(object sender, EventArgs e)
             {
                 OK = true;
                 Close();
             }
 
+            /// <summary>
+            /// Just closes form
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void buttonCancel_Click(object sender, EventArgs e)
             {
                 Close();
             }
 
+            /// <summary>
+            /// If OK flag is set, returns dialog result OK
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void TorrentProperties_FormClosed(object sender, FormClosedEventArgs e)
             {
                 if (OK)

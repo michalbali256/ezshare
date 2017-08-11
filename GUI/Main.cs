@@ -12,7 +12,9 @@ namespace EzShare
 {
     namespace GUI
     {
-
+        /// <summary>
+        /// The main window of application
+        /// </summary>
         public partial class Main : Form, IDisposable
         {
             public Main()
@@ -22,45 +24,66 @@ namespace EzShare
                 Logger.WriteLine("Loading settings.xml");
             }
 
-            private void Logger_WriteLineE(string obj)
+            /// <summary>
+            /// Everything is logged into listBox.
+            /// </summary>
+            /// <param name="line"></param>
+            private void Logger_WriteLineE(string line)
             {
-                listBoxLog.Items.Add(obj);
+                listBoxLog.Items.Add(line);
             }
+
 
             TorrentManager manager;
 
+            /// <summary>
+            /// Updates every row of table based objects of type Torrent in row.Tag
+            /// </summary>
             private void updateTable()
             {
                 foreach (DataGridViewRow r in dataGridView.Rows)
                     updateRow(r);
             }
 
-            private void addRow(Torrent t)
+            /// <summary>
+            /// Adds torrent to table
+            /// </summary>
+            /// <param name="torrent"></param>
+            private void addRow(Torrent torrent)
             {
                 DataGridViewRow r = new DataGridViewRow();
-                r.Tag = t;
+                r.Tag = torrent;
                 r.ContextMenuStrip = contextMenuStripRow;
                 r.CreateCells(dataGridView);
                 updateRow(r);
                 dataGridView.Rows.Add(r);
             }
 
-            private void updateRow(DataGridViewRow r)
+            /// <summary>
+            /// Updates row according to Torrent saved in Tag property
+            /// </summary>
+            /// <param name="dataGridViewRow">The row to update</param>
+            private void updateRow(DataGridViewRow dataGridViewRow)
             {
-                Torrent t = r.Tag as Torrent;
+                Torrent t = dataGridViewRow.Tag as Torrent;
                 if (t == null)
                     return;
-                r.Cells[0].Value = t.Name;
-                r.Cells[1].Value = t.ProgressOfFile.ToString() + "/" + t.NumberOfParts; ;
-                r.Cells[2].Value = t.Status.ToString();
-                r.Cells[3].Value = normalizeSize(t.Size);
-                r.Cells[4].Value = normalizeSpeed(t.DownloadSpeed);
-                r.Cells[5].Value = normalizeSpeed(t.UploadSpeed);
-                r.Cells[6].Value = t.Clients.Count;
+                dataGridViewRow.Cells[0].Value = t.Name;
+                dataGridViewRow.Cells[1].Value = t.ProgressOfFile.ToString() + "/" + t.NumberOfParts; ;
+                dataGridViewRow.Cells[2].Value = t.Status.ToString();
+                dataGridViewRow.Cells[3].Value = normalizeSize(t.Size);
+                dataGridViewRow.Cells[4].Value = normalizeSpeed(t.DownloadSpeed);
+                dataGridViewRow.Cells[5].Value = normalizeSpeed(t.UploadSpeed);
+                dataGridViewRow.Cells[6].Value = t.Clients.Count;
             }
 
             string[] units = {"B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB" };
 
+            /// <summary>
+            /// Adds proper unit of measurement to the size.
+            /// </summary>
+            /// <param name="size">The size in bytes</param>
+            /// <returns>Returns the size in such units that number is < 1024</returns>
             private string normalizeSize(long size)
             {
                 double siz = size;
@@ -74,6 +97,11 @@ namespace EzShare
                 return Math.Round(siz, 1) + units[unit];
             }
 
+            /// <summary>
+            /// Adds proper unit of measurement to the size.
+            /// </summary>
+            /// <param name="speed">The size in bytes</param>
+            /// <returns>Returns the speed in such units that number is < 1024</returns>
             private string normalizeSpeed(double speed)
             {
                 int unit = 0;
@@ -83,12 +111,17 @@ namespace EzShare
                     speed = speed / 1024;
                 }
 
-                if (speed == double.NaN)
+                if (double.IsNaN(speed))
                     speed = 0;
 
                 return Math.Round(speed, 1) + units[unit] + "/s";
             }
 
+            /// <summary>
+            /// Adds new torrent based on openFileDialog choice of user
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void toolStripButtonAdd_Click(object sender, EventArgs e)
             {
                 if (openFileDialogFile.ShowDialog() != DialogResult.OK)
@@ -100,6 +133,12 @@ namespace EzShare
 
             const string settingsFile = "settings.xml";
             const string xmlName = "settings";
+
+            /// <summary>
+            /// Saves settings when form is closed
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void Main_FormClosed(object sender, FormClosedEventArgs e)
             {
                 XmlDocument doc = new XmlDocument();
@@ -110,6 +149,11 @@ namespace EzShare
                 Logger.Close();
             }
 
+            /// <summary>
+            /// Loads settings from file (or sets default ones if not available) and starts manager
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private async void Main_Load(object sender, EventArgs e)
             {
                 XmlDocument doc = new XmlDocument();
@@ -136,12 +180,14 @@ namespace EzShare
 
                 timerUpdate.Enabled = true;
 
-
-
                 await manager.ConnectAllDownloadingTorrentsAsync();
             }
 
-
+            /// <summary>
+            /// Opens properties window
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void propertiesToolStripMenuItem_Click(object sender, EventArgs e)
             {
                 Torrent t = (Torrent)dataGridView.SelectedRows[0].Tag;
@@ -150,22 +196,28 @@ namespace EzShare
                     return;
             }
 
-            private void contextMenuStripRow_Opened(object sender, EventArgs e)
-            {
-
-            }
-
+            /// <summary>
+            /// Row is selected on right click, for context menu to determine which row is selected
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void dataGridView_MouseDown(object sender, MouseEventArgs e)
             {
                 if (e.Button == MouseButtons.Right)
                 {
                     var hti = dataGridView.HitTest(e.X, e.Y);
                     dataGridView.ClearSelection();
+                    //Only if the row exists
                     if (hti.RowIndex >= 0 && hti.RowIndex < dataGridView.Rows.Count)
                         dataGridView.Rows[hti.RowIndex].Selected = true;
                 }
             }
 
+            /// <summary>
+            /// Saves share file of selected torrent in table
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void saveshareFileToolStripMenuItem_Click(object sender, EventArgs e)
             {
                 if (saveFileDialogShare.ShowDialog() != DialogResult.OK)
@@ -182,6 +234,11 @@ namespace EzShare
                 doc.Save(saveFileDialogShare.FileName);
             }
 
+            /// <summary>
+            /// Starts all selected torrents
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void toolStripButtonStart_Click(object sender, EventArgs e)
             {
                 foreach (DataGridViewRow r in dataGridView.SelectedRows)
@@ -191,21 +248,27 @@ namespace EzShare
                 }
             }
 
+            /// <summary>
+            /// Allows user to select share file and select location to download torrent and starts download
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private async void toolStripButtonConnect_Click(object sender, EventArgs e)
             {
-
+                //open file dialog to select 
                 if (openFileDialogTorrent.ShowDialog() != DialogResult.OK)
                     return;
-                XmlDocument doc = new XmlDocument();
+                XmlDocument document = new XmlDocument();
                 Torrent torrent;
                 ConnectInfo connectInfo = new ConnectInfo();
                 if (saveFileDialogFile.ShowDialog() != DialogResult.OK)
                     return;
                 try
                 {
-                    doc.Load(openFileDialogTorrent.FileName);
-                    XmlElement headerElement = doc["share"][ConnectInfo.XmlName];
-                    XmlElement torrentElement = doc["share"][Torrent.XmlName];
+                    //loads selected share file end parses torrent and information about remote host
+                    document.Load(openFileDialogTorrent.FileName);
+                    XmlElement headerElement = document["share"][ConnectInfo.XmlName];
+                    XmlElement torrentElement = document["share"][Torrent.XmlName];
 
                     torrent = Torrent.CreateFromXmlShare(torrentElement, saveFileDialogFile.FileName);
                     connectInfo = ConnectInfo.ParseXml(headerElement);
@@ -248,6 +311,11 @@ namespace EzShare
 
             }
 
+            /// <summary>
+            /// Removes selected torrents from table and manager
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void toolStripButtonRemove_Click(object sender, EventArgs e)
             {
                 foreach (DataGridViewRow r in dataGridView.SelectedRows)
@@ -257,11 +325,21 @@ namespace EzShare
                 }
             }
 
+            /// <summary>
+            /// Updates table.
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void timerUpdate_Tick(object sender, EventArgs e)
             {
                 updateTable();
             }
 
+            /// <summary>
+            /// Pauses selected torrents
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void toolStripButtonPause_Click(object sender, EventArgs e)
             {
                 foreach (DataGridViewRow r in dataGridView.SelectedRows)
