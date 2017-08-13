@@ -176,8 +176,8 @@ namespace EzShare
                     addRow(t);
                 }
 
-                manager.StartListeningAsync();
-
+                var task = manager.StartListeningAsync();
+                
                 timerUpdate.Enabled = true;
 
                 await manager.ConnectAllDownloadingTorrentsAsync();
@@ -346,6 +346,15 @@ namespace EzShare
                 {
                     Torrent t = r.Tag as Torrent;
                     t?.Pause();
+                }
+            }
+
+            private void Main_KeyPress(object sender, KeyPressEventArgs e)
+            {
+                foreach (DataGridViewRow r in dataGridView.SelectedRows)
+                {
+                    manager.Remove((Torrent)r.Tag);
+                    dataGridView.Rows.Remove(r);
                 }
             }
         }

@@ -32,6 +32,14 @@
             {
             this.components = new System.ComponentModel.Container();
             this.dataGridView = new System.Windows.Forms.DataGridView();
+            this.columnTorrent = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnProgress = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnState = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnSize = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnDownload = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnUpload = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnConnectedClients = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnBlank = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonConnect = new System.Windows.Forms.ToolStripButton();
@@ -52,14 +60,6 @@
             this.saveFileDialogFile = new System.Windows.Forms.SaveFileDialog();
             this.timerUpdate = new System.Windows.Forms.Timer(this.components);
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.columnTorrent = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnProgress = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnState = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnSize = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnDownload = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnUpload = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnConnectedClients = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnBlank = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.contextMenuStripRow.SuspendLayout();
@@ -71,6 +71,7 @@
             // 
             // dataGridView
             // 
+            this.dataGridView.AllowUserToAddRows = false;
             this.dataGridView.AllowUserToDeleteRows = false;
             this.dataGridView.AllowUserToResizeRows = false;
             this.dataGridView.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
@@ -93,6 +94,58 @@
             this.dataGridView.Size = new System.Drawing.Size(908, 261);
             this.dataGridView.TabIndex = 0;
             this.dataGridView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dataGridView_MouseDown);
+            // 
+            // columnTorrent
+            // 
+            this.columnTorrent.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.columnTorrent.HeaderText = "Torrent";
+            this.columnTorrent.Name = "columnTorrent";
+            this.columnTorrent.ReadOnly = true;
+            this.columnTorrent.Width = 250;
+            // 
+            // columnProgress
+            // 
+            this.columnProgress.HeaderText = "Progress";
+            this.columnProgress.Name = "columnProgress";
+            this.columnProgress.ReadOnly = true;
+            // 
+            // columnState
+            // 
+            this.columnState.HeaderText = "State";
+            this.columnState.Name = "columnState";
+            this.columnState.ReadOnly = true;
+            // 
+            // columnSize
+            // 
+            this.columnSize.HeaderText = "Size";
+            this.columnSize.Name = "columnSize";
+            this.columnSize.ReadOnly = true;
+            // 
+            // columnDownload
+            // 
+            this.columnDownload.HeaderText = "Download";
+            this.columnDownload.Name = "columnDownload";
+            this.columnDownload.ReadOnly = true;
+            // 
+            // columnUpload
+            // 
+            this.columnUpload.HeaderText = "Upload";
+            this.columnUpload.Name = "columnUpload";
+            this.columnUpload.ReadOnly = true;
+            // 
+            // columnConnectedClients
+            // 
+            this.columnConnectedClients.HeaderText = "ConnectedClients";
+            this.columnConnectedClients.Name = "columnConnectedClients";
+            this.columnConnectedClients.ReadOnly = true;
+            // 
+            // columnBlank
+            // 
+            this.columnBlank.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.columnBlank.HeaderText = "";
+            this.columnBlank.MinimumWidth = 2;
+            this.columnBlank.Name = "columnBlank";
+            this.columnBlank.ReadOnly = true;
             // 
             // statusStrip1
             // 
@@ -249,58 +302,6 @@
             this.splitContainer1.SplitterDistance = 261;
             this.splitContainer1.TabIndex = 6;
             // 
-            // columnTorrent
-            // 
-            this.columnTorrent.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.columnTorrent.HeaderText = "Torrent";
-            this.columnTorrent.Name = "columnTorrent";
-            this.columnTorrent.ReadOnly = true;
-            this.columnTorrent.Width = 250;
-            // 
-            // columnProgress
-            // 
-            this.columnProgress.HeaderText = "Progress";
-            this.columnProgress.Name = "columnProgress";
-            this.columnProgress.ReadOnly = true;
-            // 
-            // columnState
-            // 
-            this.columnState.HeaderText = "State";
-            this.columnState.Name = "columnState";
-            this.columnState.ReadOnly = true;
-            // 
-            // columnSize
-            // 
-            this.columnSize.HeaderText = "Size";
-            this.columnSize.Name = "columnSize";
-            this.columnSize.ReadOnly = true;
-            // 
-            // columnDownload
-            // 
-            this.columnDownload.HeaderText = "Download";
-            this.columnDownload.Name = "columnDownload";
-            this.columnDownload.ReadOnly = true;
-            // 
-            // columnUpload
-            // 
-            this.columnUpload.HeaderText = "Upload";
-            this.columnUpload.Name = "columnUpload";
-            this.columnUpload.ReadOnly = true;
-            // 
-            // columnConnectedClients
-            // 
-            this.columnConnectedClients.HeaderText = "ConnectedClients";
-            this.columnConnectedClients.Name = "columnConnectedClients";
-            this.columnConnectedClients.ReadOnly = true;
-            // 
-            // columnBlank
-            // 
-            this.columnBlank.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.columnBlank.HeaderText = "";
-            this.columnBlank.MinimumWidth = 2;
-            this.columnBlank.Name = "columnBlank";
-            this.columnBlank.ReadOnly = true;
-            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -315,6 +316,7 @@
             this.Text = "ezShare";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Main_FormClosed);
             this.Load += new System.EventHandler(this.Main_Load);
+            this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Main_KeyPress);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();

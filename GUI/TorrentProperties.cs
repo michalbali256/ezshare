@@ -24,9 +24,16 @@ namespace EzShare
             public TorrentProperties(Torrent t, bool creatingNew)
             {
                 InitializeComponent();
+                progressViewer = new ProgressViewer(t.File);
+                progressViewer.Location = new Point(56, 73);
+                progressViewer.Size = new Size(504, 20);
+                this.Controls.Add(progressViewer);
+
 
                 editing = t;
                 textBoxFileName.Text = t.FilePath;
+                textBoxName.Text = t.Name;
+                labelStatusValue.Text = t.Status.ToString();
 
                 if (!creatingNew)
                 {
@@ -34,6 +41,8 @@ namespace EzShare
                     textBoxFileName.ReadOnly = true;
                 }
             }
+
+            ProgressViewer progressViewer;
 
             bool OK = false;
             /// <summary>
@@ -86,10 +95,20 @@ namespace EzShare
                 if (OK)
                 {
                     DialogResult = DialogResult.OK;
-
+                    editing.Name = textBoxName.Text;
                 }
                 else
                     DialogResult = DialogResult.Cancel;
+            }
+
+            private void TorrentProperties_Load(object sender, EventArgs e)
+            {
+                timerUpdate.Enabled = true;
+            }
+
+            private void timerUpdate_Tick(object sender, EventArgs e)
+            {
+                progressViewer.Refresh();
             }
         }
     }

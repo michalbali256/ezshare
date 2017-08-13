@@ -54,7 +54,7 @@ namespace EzShare
             /// Sends a packet to an adress to determine preferred network interface of device
             /// </summary>
             /// <returns>Returns local IP of preferred interface of this device</returns>
-            private byte[] getLocalIPAddress()
+            private static byte[] getLocalIPAddress()
             {
                 using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
                 {
@@ -72,16 +72,23 @@ namespace EzShare
             /// <returns></returns>
             public static TorrentManager FromXml(XmlElement xmlElement)
             {
-                TorrentManager tm = new TorrentManager();
+                TorrentManager torrentManager = new TorrentManager();
                 foreach (XmlElement e in xmlElement["torrents"])
                 {
                     Torrent t = Torrent.CreateFromXml(e);
-                    tm.Add(t); //later automatic start
+                    torrentManager.Add(t); //later automatic start
                 }
-                tm.MyConnectInfo = ConnectInfo.ParseXml(xmlElement[ConnectInfo.XmlName]);
-                return tm;
-            }
+                
+                torrentManager.forceIP = bool.Parse(xmlElement["forceip"].InnerText);
+                ConnectInfo loadedConnectInfo = ConnectInfo.ParseXml(xmlElement[ConnectInfo.XmlName]);
+                if (torrentManager.forceIP)
+                    torrentManager.MyConnectInfo = loadedConnectInfo;
+                else
+                    torrentManager.MyConnectInfo = new ConnectInfo(getLocalIPAddress(), loadedConnectInfo.Port);
 
+                return torrentManager;
+            }
+            public bool forceIP = false;
             public const string XmlName = "torrentmanager";
             /// <summary>
             /// Serializes this manager into Xml.
@@ -99,6 +106,7 @@ namespace EzShare
                 elem.AppendChild(torrentsElem);
 
                 elem.AppendChild(MyConnectInfo.SaveToXml(doc));
+                elem.AppendElementWithValue("forceip", forceIP.ToString());
                 return elem;
             }
 
@@ -242,6 +250,8 @@ namespace EzShare
                 
                 DownClient cl = new DownClient();
 
+                Logger.WriteLine("Trying to connect to client: " + connectInfo.IPToString() + " port: " + connectInfo.Port.ToString());
+
                 await cl.ConnectAsync(connectInfo);
                 
                 await cl.SendIntAsync(MyConnectInfo.Port); //sends listening port of this instance
@@ -260,7 +270,7 @@ namespace EzShare
                 await cl.SendByteAsync((byte)eConnectType.RequestClients);
 
                 int count = await cl.ReadIntAsync();
-                Logger.WriteLine("Receiving info of additional clients. Number of clients:" + count);
+                Logger.WriteLine("Receiving info of additional clients. Number of clients: " + count);
                 for (int i = 0; i < count; ++i)
                 {
                     Logger.WriteLine("Receiving IP");
