@@ -185,24 +185,43 @@ namespace EzShare
             /// <returns></returns>
             public async Task ConnectAllDownloadingTorrentsAsync()
             {
-                foreach (Torrent torrent in this)
+                //connecting to all torrents may take long time and user might change torrents - need to connect to existing torrents anyway
+                foreach (Torrent torrent in this.ToList())
                 {
                     if (torrent.Status == Torrent.eStatus.Downloading)
-                    {
-                        foreach (ConnectInfo info in torrent.ClientsInfo.ToArray())
-                        {
-                            try
-                            {
-                                await ConnectTorrentAsync(torrent, info);
+                        ConnectDownloadingTorrentAsync(torrent);
 
-                            }
-                            catch (SocketException)
-                            {
-                                Logger.WriteLine("Unable to connect to client: " + info.IPToString() + " port: " + info.Port);
-                            }
-                        }
-                        torrent.Download();
+                }
+            }
+
+            public async Task ConnectDownloadingTorrentAsync(Torrent torrent)
+            {
+                if (torrent.Status == Torrent.eStatus.Downloading)
+                {
+                    List<Task> connectTasks = new List<Task>();
+                    Dictionary<Task, ConnectInfo> dict = new Dictionary<Task, ConnectInfo>();
+
+                    foreach (ConnectInfo info in torrent.ClientsInfo.ToList())
+                    {
+                        Task task = ConnectTorrentAsync(torrent, info);
+                        connectTasks.Add(task);
+                        dict.Add(task, info);
                     }
+
+                    Task<Task> whenAny = Task.WhenAny(connectTasks);
+                    whenAny.Start();
+                    while (torrent.Clients.Count == 0)
+                    {
+                        Task frst = await whenAny;
+                        if (frst.IsFaulted)
+                        {
+                            Logger.WriteLine("Unable to connect to client. IP: " + dict[frst].IPToString() + " Port: " + dict[frst].Port.ToString());
+                            foreach (Exception exception in frst.Exception.InnerExceptions)
+                                Logger.WriteLine(exception.Message);
+                        }
+                    }
+
+                    await torrent.Download();
                 }
             }
 
