@@ -7,6 +7,7 @@ using System.Threading;
 using System.Xml;
 
 using EzShare.ModelLib;
+using System.IO;
 
 namespace EzShare
 {
@@ -220,19 +221,57 @@ namespace EzShare
             /// <param name="e"></param>
             private void saveshareFileToolStripMenuItem_Click(object sender, EventArgs e)
             {
+                Torrent torrent = (Torrent)dataGridView.SelectedRows[0].Tag;
+
+                saveShareFile(torrent);
+            }
+
+            /// <summary>
+            /// Opens save dialog and saves .share file to user-specified location
+            /// </summary>
+            /// <param name="torrent">The torrent of which to save .share file</param>
+            private void saveShareFile(Torrent torrent)
+            {
                 if (saveFileDialogShare.ShowDialog() != DialogResult.OK)
                     return;
+                try
+                {
+                    saveShareFile(torrent, saveFileDialogShare.FileName);
+                }
+                catch (IOException exception)
+                {
+                    MessageBox.Show("Could not save to specified location: " + saveFileDialogFile.FileName + " Reason: " + exception.Message);
+                }
+            }
 
-                Torrent t = (Torrent)dataGridView.SelectedRows[0].Tag;
+            /// <summary>
+            /// Saves share file of specified torrent to specified location.
+            /// </summary>
+            /// <param name="torrent">The torrent of which to save .share file</param>
+            /// <param name="shareFileName">File name of new .share file</param>
+            /// <exception cref="IOException"></exception>
+            private void saveShareFile(Torrent torrent, string shareFileName)
+            {
 
                 XmlDocument doc = new XmlDocument();
                 XmlElement documentElement = doc.CreateElement("share");
                 documentElement.AppendChild(manager.MyConnectInfo.SaveToXml(doc));
-                documentElement.AppendChild(t.SaveToXmlShare(doc));
+                documentElement.AppendChild(torrent.SaveToXmlShare(doc));
 
                 doc.AppendChild(documentElement);
-                doc.Save(saveFileDialogShare.FileName);
+                try
+                {
+                    doc.Save(shareFileName);
+                    Logger.WriteLine("Successfuly written " + shareFileName);
+                }
+                catch (IOException exception)
+                {
+                    Logger.WriteLine("Could not save to specified location: " + shareFileName + " Reason: " + exception.Message);
+                    throw;
+                }
+
             }
+
 
             /// <summary>
             /// Starts all selected torrents
@@ -349,13 +388,102 @@ namespace EzShare
                 }
             }
 
-            private void Main_KeyPress(object sender, KeyPressEventArgs e)
+            /// <summary>
+            /// Deletes all selected torrents
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
+            private void dataGridView_KeyDown(object sender, KeyEventArgs e)
             {
-                foreach (DataGridViewRow r in dataGridView.SelectedRows)
+                switch (e.KeyCode)
+                {
+                    case Keys.Delete:
+                        foreach (DataGridViewRow r in dataGridView.SelectedRows)
+                        {
+                            manager.Remove((Torrent)r.Tag);
+                            dataGridView.Rows.Remove(r);
+                        }
+                        break;
+                }
+            }
+
+            /// <summary>
+            /// Deletes all torrents.
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
+            private void clearAllTorrentsToolStripMenuItem_Click(object sender, EventArgs e)
+            {
+                foreach (DataGridViewRow r in dataGridView.Rows)
                 {
                     manager.Remove((Torrent)r.Tag);
                     dataGridView.Rows.Remove(r);
                 }
+            }
+
+            /// <summary>
+            /// Starts all torrents.
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
+            private void startAllToolStripMenuItem_Click(object sender, EventArgs e)
+            {
+                foreach (DataGridViewRow r in dataGridView.SelectedRows)
+                {
+                    Torrent t = r.Tag as Torrent;
+                    t?.Start();
+                }
+            }
+
+            /// <summary>
+            /// Closes window and application.
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
+            private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+            {
+                Close();
+            }
+
+            /// <summary>
+            /// Shows about window
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
+            private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+            {
+                MessageBox.Show("ezShare\n  v1.0\n Michal Bali");
+            }
+
+            private const string shareExtension = ".share";
+
+            /// <summary>
+            /// Lets user choose a folder and saves .share files of all torrents to the folder.
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
+            private void saveshareFilesOfAllTorrentsToolStripMenuItem_Click(object sender, EventArgs e)
+            {
+                if (folderBrowserDialog1.ShowDialog() != DialogResult.OK)
+                    return;
+
+                foreach (DataGridViewRow row in dataGridView.Rows)
+                {
+                    Torrent torrent = row.Tag as Torrent;
+                    if (torrent != null)
+                    {
+                        string fileName = folderBrowserDialog1.SelectedPath + "\\" + torrent.Name + shareExtension;
+                        try
+                        {
+                            saveShareFile(torrent, fileName);
+                        }
+                        catch (IOException exception)
+                        {
+                            MessageBox.Show("Could not save to specified location: " + fileName + " Reason: " + exception.Message);
+                        }
+                    }
+                }
+                
             }
         }
     }

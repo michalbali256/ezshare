@@ -56,13 +56,28 @@
             this.openFileDialogFile = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialogShare = new System.Windows.Forms.SaveFileDialog();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
+            this.torrentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadshareFileAndConnectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.createNewTorrentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveshareFilesOfAllTorrentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
+            this.clearAllTorrentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
+            this.startAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pauseAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.listBoxLog = new System.Windows.Forms.ListBox();
             this.saveFileDialogFile = new System.Windows.Forms.SaveFileDialog();
             this.timerUpdate = new System.Windows.Forms.Timer(this.components);
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.contextMenuStripRow.SuspendLayout();
+            this.menuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -93,6 +108,7 @@
             this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridView.Size = new System.Drawing.Size(908, 261);
             this.dataGridView.TabIndex = 0;
+            this.dataGridView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridView_KeyDown);
             this.dataGridView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dataGridView_MouseDown);
             // 
             // columnTorrent
@@ -265,11 +281,107 @@
             // 
             // menuStrip
             // 
+            this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.torrentsToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Size = new System.Drawing.Size(908, 24);
             this.menuStrip.TabIndex = 4;
             this.menuStrip.Text = "menuStrip1";
+            // 
+            // torrentsToolStripMenuItem
+            // 
+            this.torrentsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.loadshareFileAndConnectToolStripMenuItem,
+            this.createNewTorrentToolStripMenuItem,
+            this.saveshareFilesOfAllTorrentsToolStripMenuItem,
+            this.toolStripMenuItem1,
+            this.clearAllTorrentsToolStripMenuItem,
+            this.toolStripMenuItem2,
+            this.startAllToolStripMenuItem,
+            this.pauseAllToolStripMenuItem,
+            this.toolStripMenuItem3,
+            this.aboutToolStripMenuItem,
+            this.toolStripMenuItem4,
+            this.exitToolStripMenuItem});
+            this.torrentsToolStripMenuItem.Name = "torrentsToolStripMenuItem";
+            this.torrentsToolStripMenuItem.Size = new System.Drawing.Size(62, 20);
+            this.torrentsToolStripMenuItem.Text = "Torrents";
+            // 
+            // loadshareFileAndConnectToolStripMenuItem
+            // 
+            this.loadshareFileAndConnectToolStripMenuItem.Name = "loadshareFileAndConnectToolStripMenuItem";
+            this.loadshareFileAndConnectToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+            this.loadshareFileAndConnectToolStripMenuItem.Text = "Load .share file and connect";
+            this.loadshareFileAndConnectToolStripMenuItem.Click += new System.EventHandler(this.toolStripButtonConnect_Click);
+            // 
+            // createNewTorrentToolStripMenuItem
+            // 
+            this.createNewTorrentToolStripMenuItem.Name = "createNewTorrentToolStripMenuItem";
+            this.createNewTorrentToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+            this.createNewTorrentToolStripMenuItem.Text = "Create new torrent";
+            this.createNewTorrentToolStripMenuItem.Click += new System.EventHandler(this.toolStripButtonAdd_Click);
+            // 
+            // saveshareFilesOfAllTorrentsToolStripMenuItem
+            // 
+            this.saveshareFilesOfAllTorrentsToolStripMenuItem.Name = "saveshareFilesOfAllTorrentsToolStripMenuItem";
+            this.saveshareFilesOfAllTorrentsToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+            this.saveshareFilesOfAllTorrentsToolStripMenuItem.Text = "Save .share files of all torrents";
+            this.saveshareFilesOfAllTorrentsToolStripMenuItem.Click += new System.EventHandler(this.saveshareFilesOfAllTorrentsToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(226, 6);
+            // 
+            // clearAllTorrentsToolStripMenuItem
+            // 
+            this.clearAllTorrentsToolStripMenuItem.Name = "clearAllTorrentsToolStripMenuItem";
+            this.clearAllTorrentsToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+            this.clearAllTorrentsToolStripMenuItem.Text = "Clear all torrents";
+            this.clearAllTorrentsToolStripMenuItem.Click += new System.EventHandler(this.clearAllTorrentsToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(226, 6);
+            // 
+            // startAllToolStripMenuItem
+            // 
+            this.startAllToolStripMenuItem.Name = "startAllToolStripMenuItem";
+            this.startAllToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+            this.startAllToolStripMenuItem.Text = "Start all";
+            this.startAllToolStripMenuItem.Click += new System.EventHandler(this.startAllToolStripMenuItem_Click);
+            // 
+            // pauseAllToolStripMenuItem
+            // 
+            this.pauseAllToolStripMenuItem.Name = "pauseAllToolStripMenuItem";
+            this.pauseAllToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+            this.pauseAllToolStripMenuItem.Text = "Pause all";
+            // 
+            // toolStripMenuItem3
+            // 
+            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(226, 6);
+            // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+            this.aboutToolStripMenuItem.Text = "About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem4
+            // 
+            this.toolStripMenuItem4.Name = "toolStripMenuItem4";
+            this.toolStripMenuItem4.Size = new System.Drawing.Size(226, 6);
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+            this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // listBoxLog
             // 
@@ -311,16 +423,18 @@
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip);
+            this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip;
             this.Name = "Main";
             this.Text = "ezShare";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Main_FormClosed);
             this.Load += new System.EventHandler(this.Main_Load);
-            this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Main_KeyPress);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.contextMenuStripRow.ResumeLayout(false);
+            this.menuStrip.ResumeLayout(false);
+            this.menuStrip.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -361,6 +475,20 @@
             private System.Windows.Forms.DataGridViewTextBoxColumn columnUpload;
             private System.Windows.Forms.DataGridViewTextBoxColumn columnConnectedClients;
             private System.Windows.Forms.DataGridViewTextBoxColumn columnBlank;
+            private System.Windows.Forms.ToolStripMenuItem torrentsToolStripMenuItem;
+            private System.Windows.Forms.ToolStripMenuItem loadshareFileAndConnectToolStripMenuItem;
+            private System.Windows.Forms.ToolStripMenuItem createNewTorrentToolStripMenuItem;
+            private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
+            private System.Windows.Forms.ToolStripMenuItem clearAllTorrentsToolStripMenuItem;
+            private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
+            private System.Windows.Forms.ToolStripMenuItem startAllToolStripMenuItem;
+            private System.Windows.Forms.ToolStripMenuItem pauseAllToolStripMenuItem;
+            private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
+            private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+            private System.Windows.Forms.ToolStripMenuItem saveshareFilesOfAllTorrentsToolStripMenuItem;
+            private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+            private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
+            private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
         }
     }
 }
