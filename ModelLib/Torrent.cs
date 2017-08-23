@@ -306,7 +306,7 @@ namespace EzShare
                 if (Status == eStatus.Downloading && ProgressOfFile == NumberOfParts)
                 {
                     Status = Torrent.eStatus.Seeding;
-                    foreach (DownClient downClient in DownClients)
+                    foreach (DownClient downClient in DownClients.ToList())
                         downClient.Close();
                 }
                 Logger.WriteLine("Ending download." + Name);
@@ -427,6 +427,13 @@ namespace EzShare
                 File.Dispose();
                 foreach (Client client in Clients)
                     client.Dispose();
+            }
+
+
+            public void DisconnectAllClients()
+            {
+                foreach (DownClient downClient in DownClients.ToList())
+                    downClient.Close();
             }
         }
     }

@@ -414,8 +414,9 @@ namespace EzShare
             /// <param name="e"></param>
             private void clearAllTorrentsToolStripMenuItem_Click(object sender, EventArgs e)
             {
-                foreach (DataGridViewRow r in dataGridView.Rows)
+                while(dataGridView.RowCount > 0)
                 {
+                    DataGridViewRow r = dataGridView.Rows[0];
                     manager.Remove((Torrent)r.Tag);
                     dataGridView.Rows.Remove(r);
                 }
@@ -484,6 +485,53 @@ namespace EzShare
                     }
                 }
                 
+            }
+
+            /// <summary>
+            /// Connects all clients in connectInfo of the selected torrent.
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
+            private void reconnectAllClientsToolStripMenuItem_Click(object sender, EventArgs e)
+            {
+                Torrent torrent = (Torrent)dataGridView.SelectedRows[0].Tag;
+                manager.ConnectDownloadingTorrentAsync(torrent);
+            }
+
+            /// <summary>
+            /// Starts selected torrent.
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
+            private void startToolStripMenuItem_Click(object sender, EventArgs e)
+            {
+                //this should be executed after right click was pressed on a row - only one row is selected
+                Torrent torrent = (Torrent)dataGridView.SelectedRows[0].Tag;
+                torrent?.Start();
+            }
+
+            /// <summary>
+            /// Pauses selected torrent
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
+            private void pauseToolStripMenuItem_Click(object sender, EventArgs e)
+            {
+                //this should be executed after right click was pressed on a row - only one row is selected
+                Torrent torrent = (Torrent)dataGridView.SelectedRows[0].Tag;
+                torrent?.Pause();
+            }
+
+            /// <summary>
+            /// If status of torrent is not downloading, it makes no sense to connect donwloading clients.
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
+            private void contextMenuStripRow_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+            {
+                Torrent torrent = (Torrent)dataGridView.SelectedRows[0].Tag;
+                if (torrent.Status != Torrent.eStatus.Downloading)
+                    reconnectDownloadingClientsToolStripMenuItem.Enabled = false;
             }
         }
     }

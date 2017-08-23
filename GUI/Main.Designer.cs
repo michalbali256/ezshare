@@ -52,6 +52,12 @@
             this.openFileDialogTorrent = new System.Windows.Forms.OpenFileDialog();
             this.contextMenuStripRow = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.saveshareFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripSeparator();
+            this.startToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pauseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripSeparator();
+            this.reconnectDownloadingClientsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
             this.propertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileDialogFile = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialogShare = new System.Windows.Forms.SaveFileDialog();
@@ -253,21 +259,64 @@
             // 
             this.contextMenuStripRow.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.saveshareFileToolStripMenuItem,
+            this.toolStripMenuItem5,
+            this.startToolStripMenuItem,
+            this.pauseToolStripMenuItem,
+            this.toolStripMenuItem7,
+            this.reconnectDownloadingClientsToolStripMenuItem,
+            this.toolStripMenuItem6,
             this.propertiesToolStripMenuItem});
             this.contextMenuStripRow.Name = "contextMenuStripRow";
-            this.contextMenuStripRow.Size = new System.Drawing.Size(152, 48);
+            this.contextMenuStripRow.Size = new System.Drawing.Size(241, 154);
+            this.contextMenuStripRow.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStripRow_Opening);
             // 
             // saveshareFileToolStripMenuItem
             // 
             this.saveshareFileToolStripMenuItem.Name = "saveshareFileToolStripMenuItem";
-            this.saveshareFileToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.saveshareFileToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
             this.saveshareFileToolStripMenuItem.Text = "Save .share file";
             this.saveshareFileToolStripMenuItem.Click += new System.EventHandler(this.saveshareFileToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem5
+            // 
+            this.toolStripMenuItem5.Name = "toolStripMenuItem5";
+            this.toolStripMenuItem5.Size = new System.Drawing.Size(237, 6);
+            // 
+            // startToolStripMenuItem
+            // 
+            this.startToolStripMenuItem.Name = "startToolStripMenuItem";
+            this.startToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.startToolStripMenuItem.Text = "Start";
+            this.startToolStripMenuItem.Click += new System.EventHandler(this.startToolStripMenuItem_Click);
+            // 
+            // pauseToolStripMenuItem
+            // 
+            this.pauseToolStripMenuItem.Name = "pauseToolStripMenuItem";
+            this.pauseToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.pauseToolStripMenuItem.Text = "Pause";
+            this.pauseToolStripMenuItem.Click += new System.EventHandler(this.pauseToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem7
+            // 
+            this.toolStripMenuItem7.Name = "toolStripMenuItem7";
+            this.toolStripMenuItem7.Size = new System.Drawing.Size(237, 6);
+            // 
+            // reconnectDownloadingClientsToolStripMenuItem
+            // 
+            this.reconnectDownloadingClientsToolStripMenuItem.Name = "reconnectDownloadingClientsToolStripMenuItem";
+            this.reconnectDownloadingClientsToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.reconnectDownloadingClientsToolStripMenuItem.Text = "Reconnect downloading clients";
+            this.reconnectDownloadingClientsToolStripMenuItem.Click += new System.EventHandler(this.reconnectAllClientsToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem6
+            // 
+            this.toolStripMenuItem6.Name = "toolStripMenuItem6";
+            this.toolStripMenuItem6.Size = new System.Drawing.Size(237, 6);
             // 
             // propertiesToolStripMenuItem
             // 
             this.propertiesToolStripMenuItem.Name = "propertiesToolStripMenuItem";
-            this.propertiesToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.propertiesToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
             this.propertiesToolStripMenuItem.Text = "Properties";
             this.propertiesToolStripMenuItem.Click += new System.EventHandler(this.propertiesToolStripMenuItem_Click);
             // 
@@ -489,6 +538,12 @@
             private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
             private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
             private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
+            private System.Windows.Forms.ToolStripSeparator toolStripMenuItem5;
+            private System.Windows.Forms.ToolStripMenuItem reconnectDownloadingClientsToolStripMenuItem;
+            private System.Windows.Forms.ToolStripSeparator toolStripMenuItem6;
+            private System.Windows.Forms.ToolStripMenuItem startToolStripMenuItem;
+            private System.Windows.Forms.ToolStripMenuItem pauseToolStripMenuItem;
+            private System.Windows.Forms.ToolStripSeparator toolStripMenuItem7;
         }
     }
 }
