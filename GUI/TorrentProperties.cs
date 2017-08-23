@@ -37,7 +37,6 @@ namespace EzShare
 
                 if (!creatingNew)
                 {
-                    buttonBrowse.Enabled = false;
                     textBoxFileName.ReadOnly = true;
                 }
             }
