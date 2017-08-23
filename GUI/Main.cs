@@ -8,6 +8,7 @@ using System.Xml;
 
 using EzShare.ModelLib;
 using System.IO;
+using System.Linq;
 
 namespace EzShare
 {
@@ -180,11 +181,40 @@ namespace EzShare
                     addRow(t);
                 }
 
+                
+                if (isPortUsed(manager.MyConnectInfo))
+                {
+                    Logger.WriteLine("The port " + manager.MyConnectInfo.Port + " is already in use. Please change settings.xml to use another port.");
+                    MessageBox.Show("The port " + manager.MyConnectInfo.Port + " is already in use. Please change settings.xml to use another port.");
+                    Close();
+                }
+
                 var task = manager.StartListeningAsync();
                 
                 timerUpdate.Enabled = true;
 
                 await manager.ConnectAllDownloadingTorrentsAsync();
+            }
+
+
+            /// <summary>
+            /// Checks if port is used with the IP in this computer
+            /// </summary>
+            /// <param name="checkInfo">The IP and port to check (IP specifies network interface)</param>
+            /// <returns></returns>
+            private bool isPortUsed(ConnectInfo checkInfo)
+            {
+                var listeners = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+
+                foreach (IPEndPoint listener in listeners)
+                {
+                    if (listener.Port == checkInfo.Port && listener.Address.GetAddressBytes().SequenceEqual(checkInfo.IP))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
             }
 
             /// <summary>
