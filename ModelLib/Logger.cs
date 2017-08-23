@@ -14,7 +14,7 @@ namespace EzShare
         /// </summary>
         public static class Logger
         {
-            static StreamWriter sw = new StreamWriter("log.log");
+            static StreamWriter sw = null;
             static bool closed = false;
             public static event Action<string> WroteLine;
             public static void WriteLine(string line)
@@ -23,13 +23,18 @@ namespace EzShare
                     return;
                 WroteLine?.Invoke(line);
 
-                sw.WriteLine(line);
+                sw?.WriteLine(line);
             }
 
             public static void Close()
             {
                 sw.Close();
                 closed = true;
+            }
+
+            public static void Initialise(string logName)
+            {
+                sw = new StreamWriter(logName);
             }
         }
 

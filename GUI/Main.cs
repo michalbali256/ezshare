@@ -22,7 +22,7 @@ namespace EzShare
             {
                 InitializeComponent();
                 Logger.WroteLine += Logger_WriteLineE;
-                Logger.WriteLine("Loading settings.xml");
+                
             }
 
             /// <summary>
@@ -157,6 +157,9 @@ namespace EzShare
             /// <param name="e"></param>
             private async void Main_Load(object sender, EventArgs e)
             {
+                Logger.Initialise(System.AppDomain.CurrentDomain.FriendlyName + ".log");
+
+                Logger.WriteLine("Loading settings.xml");
                 XmlDocument doc = new XmlDocument();
                 try
                 {
