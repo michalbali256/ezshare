@@ -14,6 +14,9 @@ namespace EzShare
 {
     namespace GUI
     {
+        /// <summary>
+        /// Form for viewing properties of torrent
+        /// </summary>
         public partial class TorrentProperties : Form
         {
             /// <summary>
@@ -100,11 +103,21 @@ namespace EzShare
                     DialogResult = DialogResult.Cancel;
             }
 
+            /// <summary>
+            /// Starts timer for progressViewer update
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void TorrentProperties_Load(object sender, EventArgs e)
             {
                 timerUpdate.Enabled = true;
             }
 
+            /// <summary>
+            /// Updates progressViewer
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             private void timerUpdate_Tick(object sender, EventArgs e)
             {
                 progressViewer.Refresh();
