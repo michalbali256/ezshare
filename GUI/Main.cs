@@ -162,17 +162,30 @@ namespace EzShare
 
                 Logger.WriteLine("Loading settings.xml");
                 XmlDocument doc = new XmlDocument();
+
                 try
                 {
-                    doc.Load(settingsFile);
-                    manager = TorrentManager.FromXml(doc[xmlName][TorrentManager.XmlName]);
-                    Logger.WriteLine("Loaded settings.xml");
-                }
-                catch (System.IO.IOException)
-                {
-                    Logger.WriteLine("Loading settings.xml failed, using default settings");
-                    manager = new TorrentManager();
+                    try
+                    {
 
+                        doc.Load(settingsFile);
+                        manager = TorrentManager.FromXml(doc[xmlName][TorrentManager.XmlName]);
+                        Logger.WriteLine("Loaded settings.xml");
+                    }
+                    catch (System.IO.IOException)
+                    {
+                        Logger.WriteLine("Loading settings.xml failed, using default settings");
+                        manager = new TorrentManager();
+
+                    }
+                }
+                catch (SocketException exception)
+                {
+                    Logger.WriteLine(exception.Message);
+                    Logger.WriteLine("Unable to determine IP automatically. Please edit settings.xml.");
+                    MessageBox.Show("Unable to determine IP automatically. Please edit settings.xml.");
+                    manager = new TorrentManager(new byte[] { 127, 0, 0, 1 });
+                    Close();
                 }
 
                 dataGridView.Rows.Clear();
