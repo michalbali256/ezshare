@@ -76,7 +76,8 @@ namespace EzShare
                                 this.Close();
                                 return;
                             default:
-                                throw new Exception("Listener: Wrong request");
+                                Logger.WriteLine("Bad request received.");
+                                break;
                         }
                     }
                     catch (IOException exception)

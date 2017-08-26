@@ -226,6 +226,54 @@ namespace EzShare
             }
 
             /// <summary>
+            /// Checks if port is used with the IP in this computer
+            /// </summary>
+            /// <param name="checkInfo">The IP and port to check (IP specifies network interface)</param>
+            /// <returns></returns>
+            public static bool isPortUsed(ConnectInfo checkInfo)
+            {
+                var listeners = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+
+                foreach (IPEndPoint listener in listeners)
+                {
+                    if (listener.Port == checkInfo.Port && listener.Address.GetAddressBytes().SequenceEqual(checkInfo.IP))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            /// <summary>
+            /// Saves share file of specified torrent to specified location.
+            /// </summary>
+            /// <param name="torrent">The torrent of which to save .share file</param>
+            /// <param name="shareFileName">File name of new .share file</param>
+            /// <exception cref="IOException"></exception>
+            public void saveShareFile(Torrent torrent, string shareFileName)
+            {
+
+                XmlDocument doc = new XmlDocument();
+                XmlElement documentElement = doc.CreateElement("share");
+                documentElement.AppendChild(MyConnectInfo.SaveToXml(doc));
+                documentElement.AppendChild(torrent.SaveToXmlShare(doc));
+
+                doc.AppendChild(documentElement);
+                try
+                {
+                    doc.Save(shareFileName);
+                    Logger.WriteLine("Successfuly written " + shareFileName);
+                }
+                catch (System.IO.IOException exception)
+                {
+                    Logger.WriteLine("Could not save to specified location: " + shareFileName + " Reason: " + exception.Message);
+                    throw;
+                }
+
+            }
+
+            /// <summary>
             /// Adds torrent, must be unique
             /// </summary>
             /// <param name="torrent">The torrent to add</param>
