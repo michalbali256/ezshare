@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using EzShare.ModelLib;
@@ -19,6 +14,14 @@ namespace EzShare
         /// </summary>
         public partial class ProgressViewer : UserControl
         {
+            private readonly Pen availablePen = Pens.Green;
+            private readonly Pen missingPen = Pens.Red;
+            private readonly Pen processingPen = Pens.Yellow;
+
+            private readonly PartFile file;
+            private readonly Dictionary<PartFile.EPartStatus, Pen> penChoice;
+
+            /// <inheritdoc />
             /// <summary>
             /// Constructs new ProgressViewer for visualisation of specified PartFile
             /// </summary>
@@ -27,22 +30,18 @@ namespace EzShare
             {
                 InitializeComponent();
                 DoubleBuffered = true;
-                this.Paint += ProgressViewer_Paint;
+                Paint += ProgressViewer_Paint;
                 this.file = file;
 
-                penChoice = new Dictionary<PartFile.ePartStatus, Pen>();
-
-                penChoice.Add(PartFile.ePartStatus.Available, availablePen);
-                penChoice.Add(PartFile.ePartStatus.Missing, missingPen);
-                penChoice.Add(PartFile.ePartStatus.Processing, processingPen);
+                penChoice = new Dictionary<PartFile.EPartStatus, Pen>
+                {
+                    { PartFile.EPartStatus.Available, availablePen },
+                    { PartFile.EPartStatus.Missing, missingPen },
+                    { PartFile.EPartStatus.Processing, processingPen }
+                };
             }
 
-            Pen availablePen = Pens.Green;
-            Pen missingPen = Pens.Red;
-            Pen processingPen = Pens.Yellow;
 
-            PartFile file;
-            Dictionary<PartFile.ePartStatus, Pen> penChoice;
 
             /// <summary>
             /// Draws vertical line of proper color to visualise progress

@@ -43,11 +43,13 @@
     <Compile Include="Client.cs" />
     <Compile Include="ConnectInfo.cs" />
     <Compile Include="DownClient.cs" />
+    <Compile Include="IPNotFoundException.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="PartFile.cs" />
     <Compile Include="Torrent.cs" />
     <Compile Include="TorrentManager .cs" />
     <Compile Include="UpClient.cs" />
+    <Compile Include="WrongFileException.cs" />
     <Compile Include="XmlExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

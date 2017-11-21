@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
@@ -15,9 +12,33 @@ namespace EzShare
         /// </summary>
         public abstract class Client : IDisposable
         {
-            protected TcpClient client;
-            protected NetworkStream stream;
+            protected TcpClient SimpleClient;
+            protected NetworkStream Stream;
 
+            public delegate void ClientClosedEventHandler(Client sender);
+            /// <summary>
+            /// Event that is invoked when Client was closed
+            /// </summary>
+            public event ClientClosedEventHandler ClientClosed;
+
+            /// <summary>
+            /// Represents types of requests that can be sent
+            /// </summary>
+            protected enum EMessage
+            {
+                Part,
+                Closing,
+            }
+
+            /// <summary>
+            /// Represents response of part request
+            /// </summary>
+            public enum ERequestPartResponse
+            {
+                NotAvailable,
+                OK,
+                NeverAvailable
+            }
 
             /// <summary>
             /// IP and port of remote end point.
@@ -26,7 +47,7 @@ namespace EzShare
             /// <summary>
             /// Number if available bytes to read from underlying TcpClient
             /// </summary>
-            public int Available { get { return client.Available; } }
+            public int Available { get { return SimpleClient.Available; } }
 
             /// <summary>
             /// Counter of bytes that were downloaded.
@@ -37,14 +58,7 @@ namespace EzShare
             /// </summary>
             public int UploadedBytes { get; set; }
 
-            /// <summary>
-            /// Represents types of requests that can be sent
-            /// </summary>
-            protected enum eMessage
-            {
-                Part,
-                Closing,
-            }
+
 
             /// <summary>
             /// Asynchronously reads bytes from remote client.
@@ -58,7 +72,7 @@ namespace EzShare
                 //reads until expected number of bytes were read - sometimes it takes more than one NetworkStream.ReadAsync to read it all.
                 while (rd < count)
                 {
-                    int now = await stream.ReadAsync(bytes, rd, count - rd);
+                    int now = await Stream.ReadAsync(bytes, rd, count - rd);
                     rd += now;
                     DownloadedBytes += now;
                     if (now == 0)//if 0 bytes were read, it means connection is bad
@@ -149,7 +163,7 @@ namespace EzShare
             /// <returns></returns>
             public async Task SendBytesAsync(byte[] buffer)
             {
-                await stream.WriteAsync(buffer, 0, buffer.Length);
+                await Stream.WriteAsync(buffer, 0, buffer.Length);
                 UploadedBytes += buffer.Length;
             }
 
@@ -159,15 +173,11 @@ namespace EzShare
             /// </summary>
             public virtual void Close()
             {
-                stream.Close(100);
+                Stream.Close(100);
                 OnClientClosed();
             }
 
-            public delegate void ClientClosedEventHandler(Client sender);
-            /// <summary>
-            /// Event that is invoked when Client was closed
-            /// </summary>
-            public event ClientClosedEventHandler ClientClosed;
+
             /// <summary>
             /// Invokes ClientClosed event
             /// </summary>
@@ -178,19 +188,8 @@ namespace EzShare
 
             public void Dispose()
             {
-                ((IDisposable)client).Dispose();
+                ((IDisposable)SimpleClient).Dispose();
             }
-
-            /// <summary>
-            /// Represents response of part request
-            /// </summary>
-            public enum eRequestPartResponse
-            {
-                NotAvailable,
-                OK,
-                NeverAvailable
-            }
-
         }
     }
 }

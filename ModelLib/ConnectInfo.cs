@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 
 namespace EzShare
@@ -14,6 +12,13 @@ namespace EzShare
         /// </summary>
         public struct ConnectInfo
         {
+            public const string XmlName = "connectinfo";
+
+            public byte[] IP;
+            public int Port;
+
+
+
             /// <summary>
             /// Creates new Connectinfo with specified IP and port.
             /// </summary>
@@ -25,10 +30,30 @@ namespace EzShare
                 Port = port;
             }
 
-            public byte[] IP;
-            public int Port;
 
-            public static string XmlName = "connectinfo";
+
+            /// <summary>
+            /// Deserializes from xml
+            /// </summary>
+            /// <param name="elem"></param>
+            /// <returns></returns>
+            public static ConnectInfo ParseXml(XmlElement elem)
+            {
+                var split = elem["ip"].InnerText.Split('.');
+                return new ConnectInfo(
+                    new byte[]{
+                        byte.Parse(split[0]),
+                        byte.Parse(split[1]),
+                        byte.Parse(split[2]),
+                        byte.Parse(split[3])},
+                    int.Parse(elem["port"].InnerText));
+            }
+
+            public static bool Equals(ConnectInfo x, ConnectInfo y)
+            {
+                return x.Port == y.Port && x.IP.SequenceEqual(y.IP);
+            }
+
             /// <summary>
             /// Serializes into xml
             /// </summary>
@@ -40,28 +65,12 @@ namespace EzShare
                 XmlElement ip = doc.CreateElement("ip");
                 ip.InnerText = IPToString();
                 XmlElement port = doc.CreateElement("port");
-                port.InnerText = this.Port.ToString();
+                port.InnerText = Port.ToString();
 
                 el.AppendChild(ip);
                 el.AppendChild(port);
 
                 return el;
-            }
-            /// <summary>
-            /// Deserializes from xml
-            /// </summary>
-            /// <param name="elem"></param>
-            /// <returns></returns>
-            public static ConnectInfo ParseXml(XmlElement elem)
-            {
-                var split = elem["ip"].InnerText.Split('.');
-                return new ConnectInfo(
-                    new byte[]{
-                byte.Parse(split[0]),
-                byte.Parse(split[1]),
-                byte.Parse(split[2]),
-                byte.Parse(split[3])},
-                    int.Parse(elem["port"].InnerText));
             }
 
             /// <summary>
@@ -72,13 +81,6 @@ namespace EzShare
             {
                 return $"{IP[0]}.{IP[1]}.{IP[2]}.{IP[3]}";
             }
-
-            public static bool Equals(ConnectInfo x, ConnectInfo y)
-            {
-                return x.Port == y.Port && x.IP.SequenceEqual(y.IP);
-            }
-
-
         }
 
         

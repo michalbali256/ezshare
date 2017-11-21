@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Security.Cryptography;
 using System.IO;
 using System.Xml;
 using System.Threading.Tasks;
@@ -17,6 +15,19 @@ namespace EzShare
         /// </summary>
         public class Torrent : IDisposable
         {
+            public const string XmlName = "torrent";
+            /// <summary>
+            /// Ip and port of all known devices with this torrent.
+            /// </summary>
+            public HashSet<ConnectInfo> ClientsInfo { get; set; } = new HashSet<ConnectInfo>();
+
+            Stopwatch downloadStopWatch = new Stopwatch();
+            Stopwatch uploadStopWatch = new Stopwatch();
+
+            private bool downloadIsRunning = false;
+
+
+
             /// <summary>
             /// Creates fresh new torrent with randomly generated unique id, that does not change after.
             /// </summary>
@@ -25,12 +36,12 @@ namespace EzShare
                 downloadStopWatch.Start();
                 uploadStopWatch.Start();
                 Clients = new List<Client>();
-                id = "";
+                Id = "";
                 Random r = new Random();
                 byte[] bytes = new byte[16];
                 for (int i = 0; i < 16; ++i)
                     bytes[i] = (byte)r.Next(256);
-                id = hashToString(bytes);
+                Id = HashToString(bytes);
             }
             /// <summary>
             /// Creates new torrent with specified id.
@@ -39,13 +50,15 @@ namespace EzShare
             private Torrent(string id)
             {
                 Clients = new List<Client>();
-                this.id = id;
+                Id = id;
             }
+
+
 
             /// <summary>
             /// Represents status of torrent
             /// </summary>
-            public enum eStatus
+            public enum EStatus
             {
                 Downloading,
                 Paused,
@@ -53,46 +66,17 @@ namespace EzShare
                 Error
             }
 
-            /// <summary>
-            /// Adds new client that uses this torrent
-            /// </summary>
-            /// <param name="client">Client to add</param>
-            public void AddClient(Client client)
-            {
-                client.ClientClosed += mc_ClientClosed;
-                Clients.Add(client);
-            }
-            /// <summary>
-            /// Removes client
-            /// </summary>
-            /// <param name="client">Client to remove</param>
-            public void RemoveClient(Client client)
-            {
-                client.ClientClosed -= mc_ClientClosed;
-                Clients.Remove(client);
-            }
-            /// <summary>
-            /// When client was closed, it must be removed from Clients list.
-            /// </summary>
-            /// <param name="sender"></param>
-            private void mc_ClientClosed(Client sender)
-            {
-                Clients.Remove(sender);
-                sender.ClientClosed -= mc_ClientClosed;
-            }
+
 
             /// <summary>
-            /// Ip and port of all known devices with this torrent.
+            /// 32 chars long unique identification string of this torrent.
             /// </summary>
-            public HashSet<ConnectInfo> ClientsInfo { get; set; } = new HashSet<ConnectInfo>();
+            public string Id { get; }
 
             /// <summary>
             /// Represents status of this torrent.
             /// </summary>
-            public virtual eStatus Status { get; set; }
-
-            Stopwatch downloadStopWatch = new Stopwatch();
-            Stopwatch uploadStopWatch = new Stopwatch();
+            public virtual EStatus Status { get; protected set; }
 
             /// <summary>
             /// Actual speed of download
@@ -132,39 +116,25 @@ namespace EzShare
                     return upSum / (time / 1000d);
                 }
             }
-
-            private readonly string id;
             /// <summary>
-            /// 32 chars long unique identification string of this torrent.
+            /// The file to share
             /// </summary>
-            public string Id
-            {
-                get { return id; }
-            }
+            public PartFile File { get; private set; }
 
-            
             /// <summary>
             /// Path to shared file.
             /// </summary>
-            public virtual string FilePath
-            {
-                get { return File.FilePath; }
-            }
+            public virtual string FilePath => File.FilePath;
+
             /// <summary>
             /// Relative path to shared file
             /// </summary>
-            public virtual string FileName
-            {
-                get { return File.FileName; }
-            }
+            public virtual string FileName => File.FileName;
 
             /// <summary>
             /// Returns number of available parts of shared file.
             /// </summary>
-            public long ProgressOfFile
-            {
-                get { return File == null ? 0 : File.Progress; }
-            }
+            public long ProgressOfFile => File?.Progress ?? 0;
 
             /// <summary>
             /// Clients that share or download this torrent.
@@ -172,39 +142,22 @@ namespace EzShare
             public List<Client> Clients
             {
                 get;
-                set;
             }
             /// <summary>
             /// Clients that download this torrent.
             /// </summary>
-            public IEnumerable<DownClient> DownClients
-            {
-                get
-                {
-                    return Clients.OfType<DownClient>();
-                }
-            }
+            public IEnumerable<DownClient> DownClients => Clients.OfType<DownClient>();
+
             /// <summary>
             /// Clients that upload this torrent.
             /// </summary>
-            public IEnumerable<UpClient> UpClients
-            {
-                get
-                {
-                    return Clients.OfType<UpClient>();
-                }
-            }
-            /// <summary>
-            /// The file to share
-            /// </summary>
-            public PartFile File;
+            public IEnumerable<UpClient> UpClients => Clients.OfType<UpClient>();
+
             /// <summary>
             /// Size of shared file in bytes
             /// </summary>
-            public long Size
-            {
-                get { return File == null ? 0 : File.Size; }
-            }
+            public long Size => File?.Size ?? 0;
+
             /// <summary>
             /// Name of torrent (not unique).
             /// </summary>
@@ -212,154 +165,9 @@ namespace EzShare
             /// <summary>
             /// Number of parts file is divided into
             /// </summary>
-            public long NumberOfParts { get { return File == null ? 0 : File.NumberOfParts; } }
-
-            public static string XmlName = "torrent";
-            /// <summary>
-            /// Serializes torrent to xml
-            /// </summary>
-            /// <param name="doc"></param>
-            /// <returns>XmlElement with serialized torrent</returns>
-            public XmlElement SaveToXml(XmlDocument doc)
-            {
-                XmlElement e = doc.CreateElement(XmlName);
-
-                e.AppendElementWithValue("name", Name);
-                e.AppendElementWithValue("id", Id);
-                e.AppendElementWithValue("status", Status.ToString());
-                if (Status != eStatus.Error)
-                    e.AppendChild(File.SaveToXml(doc));
-
-                XmlElement clients = doc.CreateElement("clients");
-                foreach (ConnectInfo info in this.ClientsInfo)
-                    clients.AppendChild(info.SaveToXml(doc));
-                e.AppendChild(clients);
-                return e;
-            }
-            /// <summary>
-            /// Serializes torrent in a way so it can be used in share file (omits information exclusive for this instance)
-            /// </summary>
-            /// <param name="doc">Conext XmlDocument</param>
-            /// <returns>XmlElement with serialized torrent</returns>
-            public XmlElement SaveToXmlShare(XmlDocument doc)
-            {
-                XmlElement e = doc.CreateElement(XmlName);
-
-                e.AppendElementWithValue("name", Name);
-                e.AppendElementWithValue("id", Id);
-                e.AppendChild(File.SaveToXmlShare(doc));
-
-                return e;
-            }
+            public long NumberOfParts => File?.NumberOfParts ?? 0;
 
 
-
-            bool downloadIsRunning = false;
-            /// <summary>
-            /// Asynchronously downloads torrent using Clients.
-            /// </summary>
-            /// <returns></returns>
-            public async Task Download()
-            {
-                downloadIsRunning = true;
-                Status = Torrent.eStatus.Downloading;
-                Logger.WriteLine("Starting download:" + Name);
-
-                long part;
-                var tasks = new Dictionary<Task<Client.eRequestPartResponse>, Tuple<DownClient, long>>();
-                //creates tasks from all clients that are currently assigned to torrent - assignes different parts of file to different clients.
-                foreach (var c in DownClients)
-                {
-                    part = File.GetPartIndex(PartFile.ePartStatus.Missing);
-                    File.PartStatus[part] = PartFile.ePartStatus.Processing;
-                    if (part == -1)
-                        break;
-                    tasks.Add(c.DownloadPart(File, part), Tuple.Create(c, part));
-                }
-
-                while (tasks.Count != 0)
-                {//when one of the clients has finished downloading a part, another part is assigned.
-                    var t = await Task.WhenAny(tasks.Keys);
-
-                    DownClient clientEnded = tasks[t].Item1;
-                    long partEnded = tasks[t].Item2;
-
-                    if (t.Result == Client.eRequestPartResponse.OK)
-                    {
-                        File.PartStatus[partEnded] = PartFile.ePartStatus.Available;
-                        Logger.WriteLine("Part transfered successfuly.");
-                    }
-                    else
-                        File.PartStatus[partEnded] = PartFile.ePartStatus.Missing;
-                    tasks.Remove(t);
-
-                    part = File.GetPartIndex(PartFile.ePartStatus.Missing);
-                    //if there is still a missing part and torrent is still downloading(may be paused) and client is still functioning
-                    if (part != -1 && Status == eStatus.Downloading && Clients.Contains(clientEnded))
-                    {
-                        File.PartStatus[part] = PartFile.ePartStatus.Processing;
-                        tasks.Add(clientEnded.DownloadPart(File, part), Tuple.Create(clientEnded, part));
-                    }
-
-                }
-                //if the file is downloaded
-                if (Status == eStatus.Downloading && ProgressOfFile == NumberOfParts)
-                {
-                    Status = Torrent.eStatus.Seeding;
-                    foreach (DownClient downClient in DownClients.ToList())
-                        downClient.Close();
-                }
-                Logger.WriteLine("Ending download." + Name);
-                downloadIsRunning = false;
-            }
-
-            /// <summary>
-            /// Change status of torrent to paused
-            /// </summary>
-            public void Pause()
-            {
-                if(Status != eStatus.Error)
-                    Status = eStatus.Paused;
-            }
-
-            /// <summary>
-            /// Resumes torrent - either to Seeding state or resumes download.
-            /// </summary>
-            public async void Start()
-            {
-                if (Status == eStatus.Error)
-                {
-                    Logger.WriteLine("Cannot start torrent with error");
-                    return;
-                }
-
-                if (ProgressOfFile == NumberOfParts)
-                {
-                    Status = eStatus.Seeding;
-                }
-                else
-                {
-                    Status = eStatus.Downloading;
-                    if (!downloadIsRunning)
-                        await Download();
-                }
-
-            }
-
-            /// <summary>
-            /// Releases unmanaged resources - closes clients and file.
-            /// </summary>
-            internal void Close()
-            {
-                File?.Close();
-                foreach (Client client in Clients)
-                    client.Close();
-            }
-
-            private static string hashToString(byte[] hash)
-            {
-                return BitConverter.ToString(hash).Replace("-", string.Empty);
-            }
 
             /// <summary>
             /// Creates new torrent with specified file.
@@ -372,10 +180,9 @@ namespace EzShare
                 t.File = PartFile.FromPath(path);
 
                 t.Name = t.FileName;
-                t.Status = eStatus.Seeding;
+                t.Status = EStatus.Seeding;
                 return t;
             }
-
             /// <summary>
             /// Deserializes new torrent from xml - whole torrent is loaded
             /// </summary>
@@ -385,19 +192,19 @@ namespace EzShare
             {
                 Torrent t = new Torrent(elem["id"].InnerText);
                 t.Name = elem["name"].InnerText;
-                t.Status = (eStatus)Enum.Parse(typeof(eStatus), elem["status"].InnerText);
-                if (t.Status != eStatus.Error)
+                t.Status = (EStatus)Enum.Parse(typeof(EStatus), elem["status"].InnerText);
+                if (t.Status != EStatus.Error)
                     try
                     {
-                        t.File = PartFile.FromXml(elem[PartFile.XmlName], t.Status == eStatus.Seeding); //check hash only if the the file is already downloaded - otherwise the hash must be different
+                        t.File = PartFile.FromXml(elem[PartFile.XmlName], t.Status == EStatus.Seeding); //check hash only if the the file is already downloaded - otherwise the hash must be different
                     }
                     catch (WrongFileException)
                     {
-                        t.Status = eStatus.Error;
+                        t.Status = EStatus.Error;
                     }
                     catch (IOException)
                     {
-                        t.Status = eStatus.Error;
+                        t.Status = EStatus.Error;
                     }
                 foreach (XmlElement e in elem["clients"])
                 {
@@ -421,6 +228,163 @@ namespace EzShare
 
                 return t;
             }
+            
+            /// <summary>
+            /// Serializes torrent to xml
+            /// </summary>
+            /// <param name="doc"></param>
+            /// <returns>XmlElement with serialized torrent</returns>
+            public XmlElement SaveToXml(XmlDocument doc)
+            {
+                XmlElement e = doc.CreateElement(XmlName);
+
+                e.AppendElementWithValue("name", Name);
+                e.AppendElementWithValue("id", Id);
+                e.AppendElementWithValue("status", Status.ToString());
+                if (Status != EStatus.Error)
+                    e.AppendChild(File.SaveToXml(doc));
+
+                XmlElement clients = doc.CreateElement("clients");
+                foreach (ConnectInfo info in ClientsInfo)
+                    clients.AppendChild(info.SaveToXml(doc));
+                e.AppendChild(clients);
+                return e;
+            }
+            /// <summary>
+            /// Serializes torrent in a way so it can be used in share file (omits information exclusive for this instance)
+            /// </summary>
+            /// <param name="doc">Conext XmlDocument</param>
+            /// <returns>XmlElement with serialized torrent</returns>
+            public XmlElement SaveToXmlShare(XmlDocument doc)
+            {
+                XmlElement e = doc.CreateElement(XmlName);
+
+                e.AppendElementWithValue("name", Name);
+                e.AppendElementWithValue("id", Id);
+                e.AppendChild(File.SaveToXmlShare(doc));
+
+                return e;
+            }
+
+            /// <summary>
+            /// Adds new client that uses this torrent
+            /// </summary>
+            /// <param name="client">Client to add</param>
+            public void AddClient(Client client)
+            {
+                client.ClientClosed += Mc_ClientClosed;
+                Clients.Add(client);
+            }
+            /// <summary>
+            /// Removes client
+            /// </summary>
+            /// <param name="client">Client to remove</param>
+            public void RemoveClient(Client client)
+            {
+                client.ClientClosed -= Mc_ClientClosed;
+                Clients.Remove(client);
+            }
+            
+            /// <summary>
+            /// Asynchronously downloads torrent using Clients.
+            /// </summary>
+            /// <returns></returns>
+            public async Task DownloadAsync()
+            {
+                downloadIsRunning = true;
+                Status = EStatus.Downloading;
+                Logger.WriteLine("Starting download:" + Name);
+
+                long part;
+                var tasks = new Dictionary<Task<Client.ERequestPartResponse>, Tuple<DownClient, long>>();
+                //creates tasks from all clients that are currently assigned to torrent - assignes different parts of file to different clients.
+                foreach (var c in DownClients)
+                {
+                    part = File.GetPartIndex(PartFile.EPartStatus.Missing);
+                    File.PartStatus[part] = PartFile.EPartStatus.Processing;
+                    if (part == -1)
+                        break;
+                    tasks.Add(c.DownloadPartAsync(File, part), Tuple.Create(c, part));
+                }
+
+                while (tasks.Count != 0)
+                {//when one of the clients has finished downloading a part, another part is assigned.
+                    var t = await Task.WhenAny(tasks.Keys);
+
+                    DownClient clientEnded = tasks[t].Item1;
+                    long partEnded = tasks[t].Item2;
+
+                    if (t.Result == Client.ERequestPartResponse.OK)
+                    {
+                        File.PartStatus[partEnded] = PartFile.EPartStatus.Available;
+                        Logger.WriteLine("Part transfered successfuly.");
+                    }
+                    else
+                        File.PartStatus[partEnded] = PartFile.EPartStatus.Missing;
+                    tasks.Remove(t);
+
+                    part = File.GetPartIndex(PartFile.EPartStatus.Missing);
+                    //if there is still a missing part and torrent is still downloading(may be paused) and client is still functioning
+                    if (part != -1 && Status == EStatus.Downloading && Clients.Contains(clientEnded))
+                    {
+                        File.PartStatus[part] = PartFile.EPartStatus.Processing;
+                        tasks.Add(clientEnded.DownloadPartAsync(File, part), Tuple.Create(clientEnded, part));
+                    }
+
+                }
+                //if the file is downloaded
+                if (Status == EStatus.Downloading && ProgressOfFile == NumberOfParts)
+                {
+                    Status = EStatus.Seeding;
+                    foreach (DownClient downClient in DownClients.ToList())
+                        downClient.Close();
+                }
+                Logger.WriteLine("Ending download." + Name);
+                downloadIsRunning = false;
+            }
+
+            /// <summary>
+            /// Change status of torrent to paused
+            /// </summary>
+            public void Pause()
+            {
+                if(Status != EStatus.Error)
+                    Status = EStatus.Paused;
+            }
+
+            /// <summary>
+            /// Resumes torrent - either to Seeding state or resumes download.
+            /// </summary>
+            public async void StartAsync()
+            {
+                if (Status == EStatus.Error)
+                {
+                    Logger.WriteLine("Cannot start torrent with error");
+                    return;
+                }
+
+                if (ProgressOfFile == NumberOfParts)
+                {
+                    Status = EStatus.Seeding;
+                }
+                else
+                {
+                    Status = EStatus.Downloading;
+                    if (!downloadIsRunning)
+                        await DownloadAsync();
+                }
+
+            }
+
+            /// <summary>
+            /// Releases unmanaged resources - closes clients and file.
+            /// </summary>
+            internal void Close()
+            {
+                File?.Close();
+                foreach (Client client in Clients)
+                    client.Close();
+            }
 
             public void Dispose()
             {
@@ -429,11 +393,24 @@ namespace EzShare
                     client.Dispose();
             }
 
-
             public void DisconnectAllClients()
             {
                 foreach (DownClient downClient in DownClients.ToList())
                     downClient.Close();
+            }
+
+            private static string HashToString(byte[] hash)
+            {
+                return BitConverter.ToString(hash).Replace("-", string.Empty);
+            }
+            /// <summary>
+            /// When client was closed, it must be removed from Clients list.
+            /// </summary>
+            /// <param name="sender"></param>
+            private void Mc_ClientClosed(Client sender)
+            {
+                Clients.Remove(sender);
+                sender.ClientClosed -= Mc_ClientClosed;
             }
         }
     }

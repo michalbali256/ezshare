@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Net;
 using System.IO;
@@ -22,8 +18,8 @@ namespace EzShare
             /// <param name="c">TcpClient that should be connected.</param>
             public UpClient(TcpClient c)
             {
-                this.client = c;
-                stream = c.GetStream();
+                SimpleClient = c;
+                Stream = c.GetStream();
                 ConnectInfo = new ConnectInfo(((IPEndPoint)c.Client.RemoteEndPoint).Address.GetAddressBytes(), ((IPEndPoint)c.Client.RemoteEndPoint).Port);
             }
 
@@ -32,7 +28,7 @@ namespace EzShare
             /// </summary>
             /// <param name="torrent">Torrent, to which is this client assigned.</param>
             /// <returns></returns>
-            internal async Task ListenAsync(Torrent torrent)
+            public async Task ListenAsync(Torrent torrent)
             {
                 for (;;)
                 {
@@ -40,40 +36,15 @@ namespace EzShare
                     Logger.WriteLine("Listener: Client listening for requests.");
                     try
                     {
-                        await stream.ReadAsync(b, 0, 1);
-                        switch ((eMessage)b[0])
+                        await Stream.ReadAsync(b, 0, 1);
+                        switch ((EMessage)b[0])
                         {
-                            case eMessage.Part:
-                                if (torrent.Status != Torrent.eStatus.Seeding && torrent.Status != Torrent.eStatus.Downloading)
-                                {
-                                    Logger.WriteLine("Listener: Torrent is paused or stopped or error, sending NeverAvailable flag.");
-                                    await SendByteAsync((byte)eRequestPartResponse.NeverAvailable);
-                                    break;
-                                }
-
-                                Logger.WriteLine("Listener: Request for part accepted.");
-                                long part = await ReadLongAsync();
-                                Logger.WriteLine("Listener: Part number:" + part);
-                                if (torrent.File.PartStatus[part] != PartFile.ePartStatus.Available)
-                                {
-                                    Logger.WriteLine("Listener: Part " + part + " not available, sending NotAvailable flag.");
-                                    await SendByteAsync((byte)eRequestPartResponse.NotAvailable);
-                                    break;
-                                }
-                                Logger.WriteLine("Listener: Sending OK response for part: " + part);
-                                await SendByteAsync((byte)eRequestPartResponse.OK);
-
-                                byte[] buffer = new byte[torrent.File.GetPartLength(part)];
-                                Logger.WriteLine("Listener: Reading part " + part + " from disc");
-
-                                await torrent.File.ReadPart(buffer, part);
-                                Logger.WriteLine("Listener: Sending Part" + part);
-                                await SendBytesAsync(buffer);
-
+                            case EMessage.Part:
+                                await PartRequestAsync(torrent);
                                 break;
-                            case eMessage.Closing:
+                            case EMessage.Closing:
                                 Logger.WriteLine("Other side is closing connection. Closing too.");
-                                this.Close();
+                                Close();
                                 return;
                             default:
                                 Logger.WriteLine("Bad request received.");
@@ -83,10 +54,39 @@ namespace EzShare
                     catch (IOException exception)
                     {
                         Logger.WriteLine("Closing connection, exception thrown:" + exception);
-                        this.Close();
+                        Close();
                         return;
                     }
                 }
+            }
+
+            private async Task PartRequestAsync(Torrent torrent)
+            {
+                if (torrent.Status != Torrent.EStatus.Seeding && torrent.Status != Torrent.EStatus.Downloading)
+                {
+                    Logger.WriteLine("Listener: Torrent is paused or stopped or error, sending NeverAvailable flag.");
+                    await SendByteAsync((byte)ERequestPartResponse.NeverAvailable);
+                    return;
+                }
+
+                Logger.WriteLine("Listener: Request for part accepted.");
+                long part = await ReadLongAsync();
+                Logger.WriteLine("Listener: Part number:" + part);
+                if (torrent.File.PartStatus[part] != PartFile.EPartStatus.Available)
+                {
+                    Logger.WriteLine("Listener: Part " + part + " not available, sending NotAvailable flag.");
+                    await SendByteAsync((byte)ERequestPartResponse.NotAvailable);
+                    return;
+                }
+                Logger.WriteLine("Listener: Sending OK response for part: " + part);
+                await SendByteAsync((byte)ERequestPartResponse.OK);
+
+                byte[] buffer = new byte[torrent.File.GetPartLength(part)];
+                Logger.WriteLine("Listener: Reading part " + part + " from disc");
+
+                await torrent.File.ReadPartAsync(buffer, part);
+                Logger.WriteLine("Listener: Sending Part" + part);
+                await SendBytesAsync(buffer);
             }
         }
     }

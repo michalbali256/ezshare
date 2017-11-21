@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 
 namespace EzShare
@@ -14,9 +10,13 @@ namespace EzShare
         /// </summary>
         public static class Logger
         {
-            static StreamWriter sw = null;
-            static bool closed = false;
+            private static StreamWriter sw = null;
+            private static bool closed = false;
+
+
             public static event Action<string> WroteLine;
+
+
             public static void WriteLine(string line)
             {
                 if (closed)

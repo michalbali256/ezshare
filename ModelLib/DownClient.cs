@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Net;
 using System.Threading.Tasks;
 using System.Net.Sockets;
@@ -21,7 +18,7 @@ namespace EzShare
             /// </summary>
             public DownClient()
             {
-                client = new TcpClient();
+                SimpleClient = new TcpClient();
             }
 
             /// <summary>
@@ -32,8 +29,8 @@ namespace EzShare
             public async Task ConnectAsync(ConnectInfo info)
             {
                 ConnectInfo = new ConnectInfo(info.IP, info.Port);
-                await client.ConnectAsync(new IPAddress(info.IP), info.Port);
-                stream = client.GetStream();
+                await SimpleClient.ConnectAsync(new IPAddress(info.IP), info.Port);
+                Stream = SimpleClient.GetStream();
             }
 
             /// <summary>
@@ -42,13 +39,13 @@ namespace EzShare
             /// <param name="file">PartFile into which will be the part written</param>
             /// <param name="part">Number of downloaded part</param>
             /// <returns>Returns eRequestPartResponse, which indicates whether process went well or the part was not available</returns>
-            public async Task<eRequestPartResponse> DownloadPart(PartFile file, long part)
+            public async Task<ERequestPartResponse> DownloadPartAsync(PartFile file, long part)
             {
                 try
                 {
                     Logger.WriteLine("Sending request for part");
 
-                    await SendByteAsync((byte)eMessage.Part);
+                    await SendByteAsync((byte)EMessage.Part);
 
                     Logger.WriteLine("Sending part number: " + part);
 
@@ -56,8 +53,8 @@ namespace EzShare
 
                     byte resp = await ReadByteAsync();
 
-                    eRequestPartResponse response = (eRequestPartResponse)Enum.Parse(typeof(eRequestPartResponse), resp.ToString());
-                    if (response != eRequestPartResponse.OK)
+                    ERequestPartResponse response = (ERequestPartResponse)Enum.Parse(typeof(ERequestPartResponse), resp.ToString());
+                    if (response != ERequestPartResponse.OK)
                     {
                         Logger.WriteLine("Part " + response.ToString());
                         return response;
@@ -72,25 +69,25 @@ namespace EzShare
                     await file.WritePartAsync(buffer, part);
 
 
-                    return eRequestPartResponse.OK;
+                    return ERequestPartResponse.OK;
                 }
                 catch (IOException exception)
                 {
                     Logger.WriteLine("Closing connection. Exception caught: " + exception.Message);
-                    this.Close();
-                    return eRequestPartResponse.NeverAvailable;
+                    Close();
+                    return ERequestPartResponse.NeverAvailable;
                 }
                 catch (SocketException exception)
                 {
                     Logger.WriteLine("Closing connection. Exception caught: " + exception.Message);
-                    this.Close();
-                    return eRequestPartResponse.NeverAvailable;
+                    Close();
+                    return ERequestPartResponse.NeverAvailable;
                 }
             }
 
-            public async override void Close()
+            public override async void Close()
             {
-                await SendByteAsync((byte)eMessage.Closing);
+                await SendByteAsync((byte)EMessage.Closing);
                 base.Close();
             }
         }

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml;
 using System.Threading.Tasks;
-
 using System.Net.Sockets;
 using System.Net;
 using System.Collections;
+using System.IO;
 
 namespace EzShare
 {
@@ -19,6 +18,8 @@ namespace EzShare
         /// </summary>
         public class TorrentManager : IEnumerable<Torrent>, IDisposable
         {
+            public const string XmlName = "torrentmanager";
+            public bool ForceIp = false;
             /// <summary>
             /// Collection of torrents managed by this manager
             /// </summary>
@@ -34,12 +35,14 @@ namespace EzShare
                 set { torrents[i] = value; }
             }
 
+
+
             /// <summary>
             /// Constructs new empty manager. Network interface used for listening determined automatically.
             /// </summary>
             public TorrentManager()
             {
-                getLocalIPAddress();
+                GetLocalIpAddress();
             }
             /// <summary>
             /// Constructs new empty manager.
@@ -50,11 +53,21 @@ namespace EzShare
                 MyConnectInfo = new ConnectInfo(ipAdress, 10421);
             }
 
+
+
+            enum EConnectType
+            {
+                RequestClients,
+                JustConnect
+            }
+
+
+
             /// <summary>
             /// Sends a packet to an adress to determine preferred network interface of device
             /// </summary>
             /// <returns>Returns local IP of preferred interface of this device</returns>
-            private static byte[] getLocalIPAddress()
+            private static byte[] GetLocalIpAddress()
             {
                 using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
                 {
@@ -62,7 +75,6 @@ namespace EzShare
                     IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
                     return endPoint.Address.GetAddressBytes();
                 }
-                throw new IPNotFoundException("Local IP Address Not Found!");
             }
 
             /// <summary>
@@ -79,17 +91,16 @@ namespace EzShare
                     torrentManager.Add(t); //later automatic start
                 }
                 
-                torrentManager.forceIP = bool.Parse(xmlElement["forceip"].InnerText);
+                torrentManager.ForceIp = bool.Parse(xmlElement["forceip"].InnerText);
                 ConnectInfo loadedConnectInfo = ConnectInfo.ParseXml(xmlElement[ConnectInfo.XmlName]);
-                if (torrentManager.forceIP)
+                if (torrentManager.ForceIp)
                     torrentManager.MyConnectInfo = loadedConnectInfo;
                 else
-                    torrentManager.MyConnectInfo = new ConnectInfo(getLocalIPAddress(), loadedConnectInfo.Port);
+                    torrentManager.MyConnectInfo = new ConnectInfo(GetLocalIpAddress(), loadedConnectInfo.Port);
 
                 return torrentManager;
             }
-            public bool forceIP = false;
-            public const string XmlName = "torrentmanager";
+            
             /// <summary>
             /// Serializes this manager into Xml.
             /// </summary>
@@ -106,7 +117,7 @@ namespace EzShare
                 elem.AppendChild(torrentsElem);
 
                 elem.AppendChild(MyConnectInfo.SaveToXml(doc));
-                elem.AppendElementWithValue("forceip", forceIP.ToString());
+                elem.AppendElementWithValue("forceip", ForceIp.ToString());
                 return elem;
             }
 
@@ -125,8 +136,7 @@ namespace EzShare
                 {
                     client = await lis.AcceptTcpClientAsync();
                     UpClient mc = new UpClient(client);
-                    Logger.WriteLine("Client connected. IP: " + ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString());
-
+                    Logger.WriteLine("Client connected. IP: " + ((IPEndPoint)client.Client.RemoteEndPoint).Address);
 
                     int remoteListeningPort = await mc.ReadIntAsync();
                     Logger.WriteLine("Clients listening port: " + remoteListeningPort);
@@ -136,12 +146,12 @@ namespace EzShare
                     Logger.WriteLine("Requests torrent with id: " + id);
 
                     //if there is torrent with this id that can be seeded, create new UpClient that will share this torrent.
-                    if (torrents.ContainsKey(id) && (torrents[id].Status == Torrent.eStatus.Downloading || torrents[id].Status == Torrent.eStatus.Seeding))
+                    if (torrents.ContainsKey(id) && (torrents[id].Status == Torrent.EStatus.Downloading || torrents[id].Status == Torrent.EStatus.Seeding))
                     {
                         Logger.WriteLine("Sending OK for torrent with id: " + id);
-                        await mc.SendByteAsync((byte)Client.eRequestPartResponse.OK);
+                        await mc.SendByteAsync((byte)Client.ERequestPartResponse.OK);
                         //sends information about all clients that could seed this torrent
-                        if (await mc.ReadByteAsync() == (byte)eConnectType.RequestClients)
+                        if (await mc.ReadByteAsync() == (byte)EConnectType.RequestClients)
                         {
                             Logger.WriteLine("Sending number of clients: " + torrents[id].ClientsInfo.Count);
                             await mc.SendIntAsync(torrents[id].ClientsInfo.Count);
@@ -170,12 +180,10 @@ namespace EzShare
                     {
                         Logger.WriteLine("Requested torrent is unavailable");
 
-                        await mc.SendByteAsync((byte)Client.eRequestPartResponse.NeverAvailable);
-
+                        await mc.SendByteAsync((byte)Client.ERequestPartResponse.NeverAvailable);
 
                         mc.Close();
                     }
-
                 }
             }
 
@@ -188,7 +196,7 @@ namespace EzShare
                 //connecting to all torrents may take long time and user might change torrents - need to connect to existing torrents anyway
                 foreach (Torrent torrent in this.ToList())
                 {
-                    if (torrent.Status == Torrent.eStatus.Downloading)
+                    if (torrent.Status == Torrent.EStatus.Downloading)
                         ConnectDownloadingTorrentAsync(torrent);
 
                 }
@@ -196,7 +204,7 @@ namespace EzShare
 
             public async Task ConnectDownloadingTorrentAsync(Torrent torrent)
             {
-                if (torrent.Status == Torrent.eStatus.Downloading)
+                if (torrent.Status == Torrent.EStatus.Downloading)
                 {
                     List<Task> connectTasks = new List<Task>();
                     Dictionary<Task, ConnectInfo> dict = new Dictionary<Task, ConnectInfo>();
@@ -221,7 +229,7 @@ namespace EzShare
                         }
                     }
 
-                    await torrent.Download();
+                    await torrent.DownloadAsync();
                 }
             }
 
@@ -230,7 +238,7 @@ namespace EzShare
             /// </summary>
             /// <param name="checkInfo">The IP and port to check (IP specifies network interface)</param>
             /// <returns></returns>
-            public static bool isPortUsed(ConnectInfo checkInfo)
+            public static bool IsPortUsed(ConnectInfo checkInfo)
             {
                 var listeners = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
 
@@ -251,7 +259,7 @@ namespace EzShare
             /// <param name="torrent">The torrent of which to save .share file</param>
             /// <param name="shareFileName">File name of new .share file</param>
             /// <exception cref="IOException"></exception>
-            public void saveShareFile(Torrent torrent, string shareFileName)
+            public void SaveShareFile(Torrent torrent, string shareFileName)
             {
 
                 XmlDocument doc = new XmlDocument();
@@ -265,7 +273,7 @@ namespace EzShare
                     doc.Save(shareFileName);
                     Logger.WriteLine("Successfuly written " + shareFileName);
                 }
-                catch (System.IO.IOException exception)
+                catch (IOException exception)
                 {
                     Logger.WriteLine("Could not save to specified location: " + shareFileName + " Reason: " + exception.Message);
                     throw;
@@ -290,12 +298,6 @@ namespace EzShare
             {
                 torrents.Remove(torrent.Id);
                 torrent.Close();
-            }
-
-            enum eConnectType
-            {
-                RequestClients,
-                JustConnect
             }
 
             /// <summary>
@@ -325,7 +327,7 @@ namespace EzShare
 
                 await cl.SendIdAsync(torrent.Id);//torrent to download
 
-                if ((Client.eRequestPartResponse)await cl.ReadByteAsync() != Client.eRequestPartResponse.OK)
+                if ((Client.ERequestPartResponse)await cl.ReadByteAsync() != Client.ERequestPartResponse.OK)
                 {
                     Logger.WriteLine("Torrent not available on host: " + connectInfo.IPToString() + " port: " + connectInfo.Port.ToString());
                     Logger.WriteLine("Unable to connect to any clients");
@@ -334,7 +336,7 @@ namespace EzShare
                     return;
                 }
                 Logger.WriteLine("Requesting clients");
-                await cl.SendByteAsync((byte)eConnectType.RequestClients);
+                await cl.SendByteAsync((byte)EConnectType.RequestClients);
 
                 int count = await cl.ReadIntAsync();
                 Logger.WriteLine("Receiving info of additional clients. Number of clients: " + count);
@@ -366,13 +368,13 @@ namespace EzShare
                         await c.SendIntAsync(info.Port);
 
                         await c.SendIdAsync(torrent.Id);
-                        if ((Client.eRequestPartResponse)await c.ReadByteAsync() != Client.eRequestPartResponse.OK)
+                        if ((Client.ERequestPartResponse)await c.ReadByteAsync() != Client.ERequestPartResponse.OK)
                         {
                             Logger.WriteLine("Torrent not available on host: " + info.IPToString() + " port: " + info.Port.ToString());
                             continue;
                         }
 
-                        await c.SendByteAsync((byte)eConnectType.JustConnect);
+                        await c.SendByteAsync((byte)EConnectType.JustConnect);
 
                         Logger.WriteLine("Successfully connected to client: " + c.ConnectInfo.IPToString() + " Port:" + port.ToString());
 
@@ -393,26 +395,15 @@ namespace EzShare
                 return torrents.Values.GetEnumerator();
             }
 
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
-
             public void Dispose()
             {
                 foreach (Torrent t in this)
                     t.Dispose();
             }
-        }
 
-        /// <summary>
-        /// Represents exception that this device has no IP (probably not connected to internet).
-        /// </summary>
-        class IPNotFoundException : Exception
-        {
-            public IPNotFoundException(string message) : base(message)
+            IEnumerator IEnumerable.GetEnumerator()
             {
-
+                return GetEnumerator();
             }
         }
     }

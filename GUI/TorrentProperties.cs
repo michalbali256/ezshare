@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using EzShare.ModelLib;
 
@@ -19,6 +13,13 @@ namespace EzShare
         /// </summary>
         public partial class TorrentProperties : Form
         {
+            private bool OK = false;
+            /// <summary>
+            /// Torrent that is being edited
+            /// </summary>
+            private Torrent editing;
+            private ProgressViewer progressViewer;
+
             /// <summary>
             /// Creates new form that edits specified torrent
             /// </summary>
@@ -27,10 +28,12 @@ namespace EzShare
             public TorrentProperties(Torrent t, bool creatingNew)
             {
                 InitializeComponent();
-                progressViewer = new ProgressViewer(t.File);
-                progressViewer.Location = new Point(56, 73);
-                progressViewer.Size = new Size(504, 20);
-                this.Controls.Add(progressViewer);
+                progressViewer = new ProgressViewer(t.File)
+                {
+                    Location = new Point(56, 73),
+                    Size = new Size(504, 20)
+                };
+                Controls.Add(progressViewer);
 
 
                 editing = t;
@@ -44,27 +47,7 @@ namespace EzShare
                 }
             }
 
-            ProgressViewer progressViewer;
-
-            bool OK = false;
-            /// <summary>
-            /// Torrent that is being edited
-            /// </summary>
-            Torrent editing;
-
-            /// <summary>
-            /// Opens file dialog and edits text box.
-            /// </summary>
-            /// <param name="sender"></param>
-            /// <param name="e"></param>
-            private void buttonBrowse_Click(object sender, EventArgs e)
-            {
-                openFileDialogFile.FileName = textBoxFileName.Text;
-                if (openFileDialogFile.ShowDialog() != DialogResult.OK)
-                    return;
-                textBoxFileName.Text = openFileDialogFile.FileName;
-
-            }
+            
 
             /// <summary>
             /// Closes form and sets OK flag
